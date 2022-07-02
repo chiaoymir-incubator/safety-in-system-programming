@@ -1,41 +1,34 @@
 mod request;
 mod response;
 
-use clap::Clap;
+use clap::Parser;
 use rand::{Rng, SeedableRng};
 use std::net::{TcpListener, TcpStream};
 
+
 /// Contains information parsed from the command-line invocation of balancebeam. The Clap macros
 /// provide a fancy way to automatically construct a command-line argument parser.
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(about = "Fun with load balancing")]
 struct CmdOptions {
-    #[clap(
-        short,
-        long,
-        about = "IP/port to bind to",
-        default_value = "0.0.0.0:1100"
-    )]
+    #[clap(short, long, default_value = "0.0.0.0:1100")]
+    /// IP/port to bind to
     bind: String,
-    #[clap(short, long, about = "Upstream host to forward requests to")]
+
+    #[clap(short, long)]
+    /// Upstream host to forward requests to
     upstream: Vec<String>,
-    #[clap(
-        long,
-        about = "Perform active health checks on this interval (in seconds)",
-        default_value = "10"
-    )]
+
+    #[clap(long, default_value = "10")]
+    /// Perform active health checks on this interval (in seconds)
     active_health_check_interval: usize,
-    #[clap(
-    long,
-    about = "Path to send request to for active health checks",
-    default_value = "/"
-    )]
+
+    #[clap(long, default_value = "/")]
+    /// Path to send request to for active health checks
     active_health_check_path: String,
-    #[clap(
-        long,
-        about = "Maximum number of requests to accept per IP per minute (0 = unlimited)",
-        default_value = "0"
-    )]
+
+    #[clap(long, default_value = "0")]
+    /// Maximum number of requests to accept per IP per minute (0 = unlimited)
     max_requests_per_minute: usize,
 }
 
@@ -131,7 +124,7 @@ fn handle_connection(mut client_conn: TcpStream, state: &ProxyState) {
             return;
         }
     };
-    let upstream_ip = client_conn.peer_addr().unwrap().ip().to_string();
+    let upstream_ip = upstream_conn.peer_addr().unwrap().ip().to_string();
 
     // The client may now send us one or more requests. Keep trying to read requests until the
     // client hangs up or we get an error.
