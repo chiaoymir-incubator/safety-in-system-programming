@@ -27,6 +27,40 @@ fn pick_a_random_word() -> String {
     String::from(words[rand::thread_rng().gen_range(0, words.len())].trim())
 }
 
+fn vec_to_string(pool: Vec<char>) -> String {
+    pool.into_iter().map(|i| i.to_string()).collect::<String>()
+}
+
+fn print_status(secret_word : Vec<char>, pool: Vec<char>) {
+    let mut v: Vec<char> = Vec::new();
+    for i in secret_word.iter() {
+        if pool.contains(&i) {
+            v.push(*i);
+        } else {
+            v.push('-')
+        }
+    }
+    println!("The word so far is {}", vec_to_string(v))
+}
+
+fn print_letters(pool: Vec<char>) {
+    println!("You have guessed the following letters: {}", vec_to_string(pool))
+}
+
+fn print_win_message(s: String) {
+    println!("Congratulations you guessed the secret word: {}!", s)
+}
+
+fn is_win(secret_word : Vec<char>, pool: Vec<char>) -> bool {
+    for i in secret_word.iter() {
+        if !pool.contains(&i) {
+            return false
+        } 
+    }
+    true
+}
+
+
 fn main() {
     let secret_word = pick_a_random_word();
     // Note: given what you know about Rust so far, it's easier to pull characters out of a
@@ -34,7 +68,35 @@ fn main() {
     // secret_word by doing secret_word_chars[i].
     let secret_word_chars: Vec<char> = secret_word.chars().collect();
     // Uncomment for debugging:
-    // println!("random word: {}", secret_word);
+    println!("random word: {}", secret_word);
 
     // Your code here! :)
+    let mut counter = NUM_INCORRECT_GUESSES;
+    let mut guesses = Vec::new();
+    while counter > 0 {
+        print_status(secret_word_chars.clone(), guesses.clone());
+        print_letters(guesses.clone());
+        println!("You have {} guesses left", counter);
+        print!("Please guess a letter: ");
+        // Make sure the prompt from the previous line gets displayed:
+        io::stdout()
+            .flush()
+            .expect("Error flushing stdout.");
+        let mut guess = String::new();
+        io::stdin()
+            .read_line(&mut guess)
+            .expect("Error reading line.");
+        let letter = guess.chars().nth(0).unwrap();
+        if !secret_word_chars.contains(&letter) || guesses.contains(&letter) {
+            counter -= 1;
+        }
+        guesses.push(letter.clone());
+        println!();
+        if is_win(secret_word_chars.clone(), guesses.clone()) {
+            print_win_message(secret_word.clone());
+            return
+        }
+        
+    }
+    println!("Sorry, you ran out of guesses!")
 }
