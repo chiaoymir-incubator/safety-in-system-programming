@@ -1,0 +1,173 @@
+
+<!-- saved from url=(0071)https://reberhardt.com/cs110l/spring-2020/assignments/week-6-exercises/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+        <script async="" src="./CS 110L_ Safety in Systems Programming_files/analytics.js"></script><script src="./CS 110L_ Safety in Systems Programming_files/BSCVfTNTG-yWNgHeuCpu_OptETQ.js"></script><link href="./CS 110L_ Safety in Systems Programming_files/css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/review.css">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/codemirror.css">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/style.css">
+        <title>CS 110L: Safety in Systems Programming</title>
+    </head>
+    <body>
+
+
+        <div class="page-header-container collapsed">
+            <div class="navbar">
+                <div class="navbar-contents">
+                    <div class="nav-home">
+                        <h3><a href="https://reberhardt.com/cs110l/spring-2020/">CS 110L</a></h3>
+                    </div>
+                    <ul>
+    <li><a href="https://reberhardt.com/cs110l/spring-2020/pages/schedule/">Schedule</a></li>
+    <li><a href="https://cs110l.slack.com/">Slack</a></li>
+    
+    
+    
+</ul>
+
+                </div>
+                <div class="old-class-warning">
+                    ⚠️ Heads up! You're looking at an old class website. <a href="https://cs110l.stanford.edu/">Click here for the latest version of this class.</a> ⚠️
+                </div>
+            </div>
+        </div>
+
+
+
+<div class="content">
+    <h1>Week 6 Exercises: Sharing Data by Communicating</h1>
+
+    <p>Yes we know, it’s week 7, but these exercises pertain to material you learned in
+week 6, and who’s keeping count anyway?</p>
+<p>In this week’s exercises, you’ll get to appreciate the sleekness of channels,
+a concurrency abstraction you learned about last week.</p>
+<p>The starter code is available on GitHub
+<a href="https://github.com/reberhardt7/cs110l-spr-2020-starter-code">here</a>.</p>
+<p><strong>Due date:</strong> Tuesday, May 26, 11:59pm (Pacific time)</p>
+<p><em>Ping us on Slack if you are having difficulty with this assignment. We would
+love to help clarify any misunderstandings, and we want you to sleep!</em></p>
+<h2 id="part-1-parallel_map">Part 1: <code>parallel_map</code></h2>
+<p>You want to share the joys of parallelism with your friends who haven’t learned
+about synchronization primitives yet by implementing for them a special, speedy
+function. This function takes two arguments: a vector of type <code>Vec&lt;T&gt;</code> another
+function <code>f</code> which takes elements of type <code>T</code> as input and returns type <code>U</code> as
+output. It runs <code>f</code> on each input element in the input vector and collects the
+results in an output vector. Even better, it does this in parallel! The
+function looks something like this:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">parallel_map</span><span style="color:#666">&lt;</span>T,<span style="color:#bbb"> </span>U,<span style="color:#bbb"> </span>F<span style="color:#666">&gt;</span>(<span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>input_vec: <span style="color:#007020">Vec</span><span style="color:#666">&lt;</span>T<span style="color:#666">&gt;</span>,<span style="color:#bbb"> </span>num_threads: <span style="color:#902000">usize</span>,<span style="color:#bbb"> </span>f: <span style="color:#0e84b5;font-weight:bold">F</span>)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">Vec</span><span style="color:#666">&lt;</span>U<span style="color:#666">&gt;</span><span style="color:#bbb"> 
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">where</span><span style="color:#bbb"> </span>F: <span style="color:#007020">FnOnce</span>(T)<span style="color:#bbb"> </span>-&gt; <span style="color:#0e84b5;font-weight:bold">U</span><span style="color:#bbb">  </span><span style="color:#666">+</span><span style="color:#bbb"> </span><span style="color:#007020">Send</span><span style="color:#bbb"> </span><span style="color:#666">+</span><span style="color:#bbb"> </span><span style="color:#007020">Copy</span><span style="color:#bbb"> </span><span style="color:#666">+</span><span style="color:#bbb"> </span><span style="color:#007020">'static</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">          </span>T: <span style="color:#007020">Send</span> <span style="color:#666">+</span><span style="color:#bbb"> </span><span style="color:#007020">'static</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">          </span>U: <span style="color:#007020">Send</span> <span style="color:#666">+</span><span style="color:#bbb"> </span><span style="color:#007020">'static</span><span style="color:#bbb"> </span><span style="color:#666">+</span><span style="color:#bbb"> </span><span style="color:#007020">Default</span>,<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>output_vec: <span style="color:#007020">Vec</span><span style="color:#666">&lt;</span>U<span style="color:#666">&gt;</span><span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#007020">Vec</span>::with_capacity(input_vec.len());<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#60a0b0;font-style:italic">// TODO: in parallel, run f on each input element and collect the outputs,
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">    </span><span style="color:#60a0b0;font-style:italic">// in order, in output_vec
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">    </span>output_vec<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p><code>Ok(reader)</code>, take a deep breath. There are a lot of trait shenanigans going on
+over here:</p>
+<ul>
+<li>You can read about <code>FnOnce</code> <a href="https://doc.rust-lang.org/std/ops/trait.FnOnce.html">here</a>.
+It’s basically a trait that allows for us to pass in closures for <code>f</code> – it takes
+its inputs by value. It’s basically a fancy typed function pointer. Rust also has
+other kinds of function pointer traits like <code>Fn</code> and <code>FnMut</code>. This isn’t
+particularly important to understand for this assignment.</li>
+<li>Recall that the <code>Send</code> trait indicates that a type may be safely moved across
+thread boundaries.</li>
+<li><code>Default</code> indicates a type that has some sort of default value implemented for it.</li>
+<li>The <code>'static</code> thing is a lifetime annotation – it says that any references that
+your object holds must have a static lifetime i.e. a lifetime as long as the running
+program. Here is a great <a href="https://users.rust-lang.org/t/why-does-thread-spawn-need-static-lifetime-for-generic-bounds/4541/2">discussion</a>
+if you’d like to learn more. <a href="https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html">Here</a>
+is the Rust Book on lifetimes.</li>
+<li>In summary, <code>parallel_map</code> takes in <code>input_vec</code> (as an owned type, so it can be
+consumed), <code>num_threads</code> (the number of threads that can execute in parallel), and
+a function <code>f</code> that takes as input values of type <code>T</code> and returns values of type <code>U</code>.</li>
+</ul>
+<p>Your objective is to complete this implementation by using <em>channels as your only
+synchronization mechanism</em>. This might sound like a limitation, but trust me,
+this will make your life easier. You can implement a second version using mutexes
+and condition variables if you want to fully appreicate how nice it is to use
+channels.</p>
+<p>In Lecture 12, Ryan showed how you can use channels to implement farm v3.0. Please
+make sure you understand that example before you embark on implementing <code>parallel_map</code>.</p>
+<p>As is often the case with concurrency, your solution doesn’t need to be very long (our
+solution is 43 lines of code long) but that doesn’t mean it’s trivial. You should
+carefully design your implementation before you code it up.</p>
+<p>How you design <code>parallel_map</code> is completely up to you! You are free to use as many
+channels as you need and design the messages you send across those channels (of
+course you should strive for an implementation that is simple, correct, and efficient).
+As you’re planning out your implementation, you should keep the following things
+in mind:</p>
+<ul>
+<li>The elements in the output vector need to positionally correspond to the elements
+of the input vector. That is: <code>output_vec[i] == f(input_vec[i])</code>. If you like, you
+may first implement a version that disregards order, then upgrade that to a version
+that respects the order.</li>
+<li>You are at the mercy of the thread scheduler. You have no idea what order
+threads will execute in, nor should you impose an order – doing so can severely
+limit the amount of parallelism you achieve by making your code unnecessarily
+sequential.</li>
+<li>You can send any type of value through a channel that you like, including
+structs or <a href="https://doc.rust-lang.org/std/primitive.tuple.html">tuples</a>. (Side
+note: the values need to be <code>Send</code> in order to be sent through a channel, but
+that shouldn’t be a problem for you.)</li>
+<li>You can assume <code>f</code> won’t have any side effects i.e. it will not mutate any
+external state in your program.</li>
+<li>Channels, like pipes, are unidirectional.</li>
+<li>You need to <code>drop</code> the sender for receivers to know that there’s nothing
+more to receive (you can see this in the farm example). If your code is hanging,
+it’s probably because you didn’t properly drop a sender.</li>
+<li>You need to move things out of your input vector in order to properly transfer
+ownership. (Think <code>pop</code>.)</li>
+<li>Your implementation should only spawn a total of <code>num_threads</code> threads. (If
+you’re familiar with the CS 110 ThreadPool, this is basically spinning up a
+short-lived ThreadPool to execute <code>f</code> over <code>input_vec</code>, aggregating the
+results. Don’t worry; because of the beauty of channels, this implementation
+will not be as complex as ThreadPool.)</li>
+<li>Strive for efficiency – don’t remove from the front of the vector, that is a
+O(n) operation that could have been O(1).</li>
+<li>Strive for efficiency – you know exactly how many things to expect in your
+output vector. Try not to do any unnecessary sorting. That is a O(n log n) operation
+that didn’t need to happen.</li>
+</ul>
+<p>(Optional) Feel free to do something fun with the <code>parallel_map</code> implementation – use it
+to revamp the link explorer lecture example. Use it to implement a parallelized
+Mandelbrot Set generator. It’s a very versatile function – the possibilities
+are endless!</p>
+<h2 id="part-2-weekly-survey">Part 2: Weekly Survey</h2>
+<p>Please let us know how you’re doing using <a href="https://forms.gle/EtwWcQkvzSvbRS9H6">this survey</a>.</p>
+<p>When you have submitted the survey, you should see a password. Put this code in
+<code>survey.txt</code> before submitting.</p>
+<h2 id="optional-extensions">Optional Extensions</h2>
+<p>The <code>parallel_map</code> function you implemented effectively spins up a ThreadPool,
+uses it to execute the maps, and then destroys the ThreadPool. Implement a
+proper ThreadPool that only destroys its worker threads when <code>drop</code>ped and
+give it a <code>parallel_map</code> function as well that accomplishes what you did in
+Part 1.</p>
+<p>If you thought <code>parallel_map</code> was fun, wait till you hear about <code>paralle_reduce</code>.
+Suppose you have some commutative aggregation function – say <code>+</code> for example.
+If you wanted to add up the numbers in a <code>Vec</code> of size 8, you could do it the
+boring way – by taking a linear pass through the vector and accumulating the
+sum. Or you could do something like this:</p>
+<pre><code>1 + 2 + 3 + 4 + 5 + 6 + 7 + 8
+\   /   \   /   \   /   \   /
+  3       7       11      15
+</code></pre><p>where the sums (1 + 2), (3 + 4), (5 + 6), (7 + 8) are all done in parallel, then
+you do another round of parallel sums – this time (3 + 7) and (11 + 15). And then
+you do one final sum to get your result. This is precisely what a <code>parallel_reduce</code>
+implementation should do. This presents some new synchronization challenges.
+Although your <code>parallel_map</code> implementation should serve as a good starting point.
+Better yet, you can tack this <code>parallel_reduce</code> function onto your ThreadPool
+implementation, and now you’ve got yourself a really fancy ThreadPool.</p>
+<p>Some CS161 food for thought – what would the asymptotic runtime of <code>parallel_map</code>
+be if you had infinite parallelism and each binary operation was O(1)? What if you could
+run M threads at once? What if each binary operation took time proprotional to
+the number of elements it aggregated over? What if each binary operation took time
+that varied according to a geometric distribution with success probability… jk haha.</p>
+
+</div>
+
+    
+
+
+</body></html>

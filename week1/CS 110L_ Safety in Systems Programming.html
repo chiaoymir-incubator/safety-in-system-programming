@@ -1,0 +1,463 @@
+
+<!-- saved from url=(0071)https://reberhardt.com/cs110l/spring-2020/assignments/week-1-exercises/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+        <script async="" src="./CS 110L_ Safety in Systems Programming_files/analytics.js"></script><script src="./CS 110L_ Safety in Systems Programming_files/BSCVfTNTG-yWNgHeuCpu_OptETQ.js"></script><link href="./CS 110L_ Safety in Systems Programming_files/css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/review.css">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/codemirror.css">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/style.css">
+        <title>CS 110L: Safety in Systems Programming</title>
+    </head>
+    <body>
+
+
+        <div class="page-header-container collapsed">
+            <div class="navbar">
+                <div class="navbar-contents">
+                    <div class="nav-home">
+                        <h3><a href="https://reberhardt.com/cs110l/spring-2020/">CS 110L</a></h3>
+                    </div>
+                    <ul>
+    <li><a href="https://reberhardt.com/cs110l/spring-2020/pages/schedule/">Schedule</a></li>
+    <li><a href="https://cs110l.slack.com/">Slack</a></li>
+    
+    
+    
+</ul>
+
+                </div>
+                <div class="old-class-warning">
+                    ⚠️ Heads up! You're looking at an old class website. <a href="https://cs110l.stanford.edu/">Click here for the latest version of this class.</a> ⚠️
+                </div>
+            </div>
+        </div>
+
+
+
+<div class="content">
+    <h1>Week 1 Exercises: Hello world</h1>
+
+    <p>Welcome to CS 110L! We’re so glad you’re here.</p>
+<h2 id="purpose">Purpose</h2>
+<p>This week’s exercises are designed to get you comfortable compiling/running
+Rust code and using basic Rust syntax. The best way to learn any language
+(human, computer, or otherwise) is through immersion, so you can consider this
+your study abroad in Rustland. Make sure to post about it on Insta, get some
+Döner Kebap, and enjoy the nightlife. We hope that this exercise will let us
+hit the ground running next week when we discuss concepts that you may not have
+seen yet in the languages you’ve studied.</p>
+<p>We’ll include some advice for the assignment here, but you may also have to look
+through the Rust docs, Stack Overflow, etc. as well. We (Ryan and Armin) are
+available to you via Slack to help with the assignment. You are also welcome to
+reach out to your fellow peers and work together (you must however code up your
+own solutions for this assignment).</p>
+<p><strong>Due date:</strong> Tuesday, April 14, 10:30am (Pacific time)</p>
+<p>This assignment should take 1-3 hours to complete. Even though this assignment
+is only meant to acclimate you to the Rust language, we expect it may be
+challenging; Rust is a pretty quirky language, and it will take some work to
+navigate that unfamiliarity. If you hit the 2 hour mark and aren’t close to
+finishing, please let us know so that we can address anything that might be
+tripping you up.</p>
+<h2 id="part-1-getting-oriented">Part 1: Getting oriented</h2>
+<p>The first part of this week’s exercises will be getting a simple “hello world”
+program to run!</p>
+<p>We have gotten Rust tooling set up for you on myth, so if you would like to
+develop your code there (as you do in CS 110), you should be good to go.
+However, if you would like to run your code on your local machine (e.g. because
+you have a poor internet connection or are on the other side of the world), you
+will need to <a href="https://www.rust-lang.org/tools/install">install the Rust toolchain</a>.</p>
+<p>Regardless of whether you decide to work on myth or on your personal computer,
+you should take a moment to get your development environment set up for Rust.
+Ryan wrote up a <a href="https://reberhardt.com/cs110l/spring-2020/handouts/tools-tips/">list of tips</a> that may be
+helpful. If you are using vim, I highly recommend installing the Rust plugins
+from that tips page, as they will improve your experience dramatically. For
+other editors, do a quick search to see if there are plugins that others
+recommend installing.</p>
+<p>Now, onto getting the starter code! In this class, we will be using Github to
+manage assignment submissions. Github is an awesome collaboration platform
+built on <code>git</code>, which is a <em>version control software</em>. (Version control
+software allows you to manage different versions of your code; you can save
+snapshots across different points in time, and if your code ends up breaking,
+you can go back to a previous snapshot. It’s better than saving <code>code.c</code>,
+<code>code-working.c</code>, <code>code-working-copy.c</code>, <code>code-final.c</code>,
+<code>code-final-seriously.c</code>, and <code>code-final-i-actually-submitted.c</code>, and then
+being confused as to what is what.) <code>git</code> and Github are standard tools in
+industry, and if you haven’t encountered them before, we think it would be
+valuable to get some light and friendly exposure to them.</p>
+<p>The starter code is available on GitHub
+<a href="https://github.com/reberhardt7/cs110l-spr-2020-starter-code">here</a>. You
+can “clone” (download) that repository to your computer:</p>
+<pre><code>git clone https://github.com/reberhardt7/cs110l-spr-2020-starter-code.git
+</code></pre><p>Then, <code>cd</code> into <code>week1/part-1-hello-world</code>. This directory contains a Rust
+<em>package</em>. You can see the source code in the <code>src/</code> directory; check out
+<code>src/main.rs</code>.</p>
+<p>Let’s try to compile this code! To do this, run the following command:</p>
+<pre><code>cargo build
+</code></pre><p>Cargo is kind of like <code>make</code>, but it does quite a bit more. If your project has
+dependencies, Cargo will automatically take care of downloading and configuring
+those dependencies. (It does what <code>npm</code> does in Javascript land, and what
+<code>setup.py</code> does in Python land.) Cargo can also run automated tests, generate
+documentation, benchmark your code, and more. We won’t talk about this for now,
+but you will see some of this come in handy later in the quarter.</p>
+<p>When you run <code>cargo build</code>, Cargo compiles the executable and saves it at
+<code>target/debug/hello-word</code>. Try running that now:</p>
+<pre><code>🍌 ./target/debug/hello-world
+Hello, world!
+</code></pre><p>(Yes, my shell prompt is a banana.)</p>
+<p>As a convenience, Cargo offers a <code>run</code> command that <em>both</em> compiles and runs
+the program in one shot. Try modifying <code>src/main.rs</code> to print something new,
+then run <code>cargo run</code> (without running <code>cargo build</code>). Cargo will notice
+that the file has changed, recompile your code, and run the binary for you.</p>
+<pre><code>🍌 cargo run
+   Compiling hello-world v0.1.0
+    Finished dev [unoptimized + debuginfo] target(s) in 0.77s
+     Running `target/debug/hello-world`
+You rock!
+</code></pre><p>Congrats! You’ve run your first Rust program!</p>
+<h2 id="part-2-rust-warmup">Part 2: Rust warmup</h2>
+<h3 id="syntax">Syntax</h3>
+<p>First, let’s take a whirlwind tour of Rust’s syntax. Much of this may feel
+familiar, but Rust has a few quirks when compared to other languages.</p>
+<p><em>Note: these points are expanded from Will Crichton’s <a href="http://cs242.stanford.edu/f19/labs/rust">CS 242 Rust lab
+handout</a>.</em></p>
+<p>Numeric types in Rust include <code>i8</code>, <code>i16</code>, <code>i32</code>, and <code>i64</code> (all of which store
+signed – positive or negative – numbers), as well as <code>u8</code>, <code>u16</code>, <code>u32</code>, and
+<code>u64</code> (which store unsigned – strictly nonnegative – numbers). The numbers
+<code>8</code>, <code>16</code>, and so on indicate how many bits make up a value. This is intended
+to avoid problems that C encountered because the C specification did not define
+standard widths for numeric types. This is something you will encounter in
+assignment 2 in CS 110; today, on most computers, an <code>int</code> stores 4 bytes
+(corresponding to Rust’s <code>i32</code>), but you will be working with code from the 70s
+where an <code>int</code> only stored two bytes.</p>
+<p>To declare a variable, we use the <code>let</code> keyword and specify the variable’s type:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Rust" data-lang="Rust"><span style="color:#60a0b0;font-style:italic">// Declare a variable containing a signed 32-bit number. (Equivalent to
+</span><span style="color:#60a0b0;font-style:italic">// "int n = 1" in C)
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>n: <span style="color:#902000">i32</span> <span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#40a070">1</span>;<span style="color:#bbb">
+</span></code></pre></div><p>Rust has a nifty feature called “type inference.” Instead of forcing you to
+declare the type of every variable, Rust allows you to omit the variable’s type
+when the compiler is able to figure out what the type should be. Most Rust code
+looks like this, and only includes explicit type annotations when the compiler
+can’t figure out which type should be used.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Rust" data-lang="Rust"><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>n<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#40a070">1</span>;<span style="color:#bbb">
+</span></code></pre></div><p>Unlike most languages, variables in Rust are constants <em>by default</em>. This is
+intended to reduce errors; if you modify a variable that you didn’t intend to
+(i.e. didn’t explicitly mark as mutable), the compiler will give you an error.
+Add <code>mut</code> to make a variable mutable.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Rust" data-lang="Rust"><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>n<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#40a070">0</span>;<span style="color:#bbb">
+</span><span style="color:#bbb"></span>n<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>n<span style="color:#bbb"> </span><span style="color:#666">+</span><span style="color:#bbb"> </span><span style="color:#40a070">1</span>;<span style="color:#bbb">  </span><span style="color:#60a0b0;font-style:italic">// compiles fine
+</span></code></pre></div><p>Strings are a little weird in Rust. There are two string types: <code>&amp;str</code> and
+<code>String</code>. <code>&amp;str</code> is an immutable pointer to a string somewhere in memory. For
+example:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Rust" data-lang="Rust"><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>s: <span style="color:#007020">&amp;</span><span style="color:#902000">str</span> <span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#4070a0">"Hello world"</span>;<span style="color:#bbb">    </span><span style="color:#60a0b0;font-style:italic">// the ": &amp;str" annotation is optional
+</span></code></pre></div><p>Here, the string <code>Hello world</code> is being placed in the program’s read-only data
+segment (that’s also how it works in C), and <code>s</code> is a read-only pointer to that
+memory.</p>
+<p>The <code>String</code> type stores a heap-allocated string. You’re allowed to mutate
+<code>String</code>s (so long as you use the <code>mut</code> keyword).</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Rust" data-lang="Rust"><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>s: <span style="color:#007020">String</span> <span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#007020">String</span>::from(<span style="color:#4070a0">"Hello "</span>);<span style="color:#bbb"> </span><span style="color:#60a0b0;font-style:italic">// "String" type annotation is optional
+</span><span style="color:#60a0b0;font-style:italic"></span>s.push_str(<span style="color:#4070a0">"world!"</span>);<span style="color:#bbb">
+</span></code></pre></div><p>The first line allocates memory on the heap; <code>s</code> is a <code>String</code> object
+containing a pointer to that memory. The second line appends to the heap
+buffer, reallocating/resizing the buffer if necessary. The memory for the
+string will be automatically freed after the last line where <code>s</code> is used. We’ll
+talk more about the memory allocation/deallocation on Thursday’s lecture. (This
+is sort of similar to how C++ <code>string</code> works.)</p>
+<p>The easiest way to store collections of things is in a vector:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Rust" data-lang="Rust"><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>v: <span style="color:#007020">Vec</span><span style="color:#666">&lt;</span><span style="color:#902000">i32</span><span style="color:#666">&gt;</span><span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#007020">Vec</span>::new();<span style="color:#bbb">
+</span><span style="color:#bbb"></span>v.push(<span style="color:#40a070">2</span>);<span style="color:#bbb">
+</span><span style="color:#bbb"></span>v.push(<span style="color:#40a070">3</span>);<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#60a0b0;font-style:italic">// Even here, the ": Vec&lt;i32&gt;" type annotation is optional. If you omit it, the
+</span><span style="color:#60a0b0;font-style:italic">// compiler will look ahead to see how the vector is being used, and from that, it
+</span><span style="color:#60a0b0;font-style:italic">// can infer the type of the vector elements. Neat!
+</span></code></pre></div><p>Rust also supports fixed-size arrays. Unlike C, the length of the array is
+stored as part of the array type. In addition, array accesses are generally
+bounds-checked at runtime. No buffer overflows, please!</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Rust" data-lang="Rust"><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>arr: [<span style="color:#902000">i32</span>;<span style="color:#bbb"> </span><span style="color:#40a070">4</span>]<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>[<span style="color:#40a070">0</span>,<span style="color:#bbb"> </span><span style="color:#40a070">2</span>,<span style="color:#bbb"> </span><span style="color:#40a070">4</span>,<span style="color:#bbb"> </span><span style="color:#40a070">8</span>];<span style="color:#bbb">
+</span><span style="color:#bbb"></span>arr[<span style="color:#40a070">0</span>]<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#666">-</span><span style="color:#40a070">2</span>;<span style="color:#bbb">
+</span><span style="color:#bbb"></span>println<span style="color:#666">!</span>(<span style="color:#4070a0">"{}"</span>,<span style="color:#bbb"> </span>arr[<span style="color:#40a070">0</span>]<span style="color:#bbb"> </span><span style="color:#666">+</span><span style="color:#bbb"> </span>arr[<span style="color:#40a070">1</span>]);<span style="color:#bbb">
+</span></code></pre></div><p>You can iterate over collections using iterators and some very nice,
+Python-like syntax:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Rust" data-lang="Rust"><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>i<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">in</span><span style="color:#bbb"> </span>v.iter()<span style="color:#bbb"> </span>{<span style="color:#bbb"> </span><span style="color:#60a0b0;font-style:italic">// v is the vector from above
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">    </span>println<span style="color:#666">!</span>(<span style="color:#4070a0">"{}"</span>,<span style="color:#bbb"> </span>i);<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>While loops:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Rust" data-lang="Rust"><span style="color:#007020;font-weight:bold">while</span><span style="color:#bbb"> </span>i<span style="color:#bbb"> </span><span style="color:#666">&lt;</span><span style="color:#bbb"> </span><span style="color:#40a070">20</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>i<span style="color:#bbb"> </span><span style="color:#666">+=</span><span style="color:#bbb"> </span><span style="color:#40a070">1</span>;<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>Rust also has a special loop that should be used instead of <code>while true</code>:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Rust" data-lang="Rust"><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>i<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#40a070">0</span>;<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">loop</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>i<span style="color:#bbb"> </span><span style="color:#666">+=</span><span style="color:#bbb"> </span><span style="color:#40a070">1</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">if</span><span style="color:#bbb"> </span>i<span style="color:#bbb"> </span><span style="color:#666">==</span><span style="color:#bbb"> </span><span style="color:#40a070">10</span><span style="color:#bbb"> </span>{<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">break</span>;<span style="color:#bbb"> </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>If you’re curious why this loop exists, there is some discussion
+<a href="https://stackoverflow.com/q/28892351">here</a>. Long story short, it helps the
+compiler to make some assumptions about variable initialization.</p>
+<p>Finally, Rust functions are declared like so:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Rust" data-lang="Rust"><span style="color:#60a0b0;font-style:italic">// Function with return type i32
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">sum</span>(a: <span style="color:#902000">i32</span>,<span style="color:#bbb"> </span>b: <span style="color:#902000">i32</span>)<span style="color:#bbb"> </span>-&gt; <span style="color:#902000">i32</span> {<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>a<span style="color:#bbb"> </span><span style="color:#666">+</span><span style="color:#bbb"> </span>b<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#60a0b0;font-style:italic">// Void function (no "-&gt;")
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">main</span>()<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#60a0b0;font-style:italic">// do stuff...
+</span><span style="color:#60a0b0;font-style:italic"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>There are two potentially surprising things here:</p>
+<ul>
+<li>
+<p>Unlike variables (where Rust will happily infer the variable type), you are
+required to specify the return type for functions that return values.</p>
+</li>
+<li>
+<p>There’s no <code>return</code> keyword in the <code>sum</code> function! And… it’s missing a
+semicolon!</p>
+<p>These two things actually go together. Rust is an <em>expression-based</em>
+language. In most languages that you are probably used to, there are
+<em>expressions</em> (which evaluate to values) and <em>statements</em> (which do not). For
+example, in C++, the ternary operator is an expression; it evaluates to a
+value that you can store in a variable:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++"><span style="color:#902000">int</span> x <span style="color:#666">=</span> someBool <span style="color:#666">?</span> <span style="color:#40a070">2</span> <span style="color:#666">:</span> <span style="color:#40a070">4</span>;
+</code></pre></div><p>By contrast, <code>if</code> statements are statements because they do <em>not</em> evaluate to
+a value. This code doesn’t compile:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++"><span style="color:#902000">int</span> x <span style="color:#666">=</span> <span style="color:#007020;font-weight:bold">if</span> (someBool) {
+    <span style="color:#40a070">2</span>;
+} <span style="color:#007020;font-weight:bold">else</span> {
+    <span style="color:#40a070">4</span>;
+}
+</code></pre></div><p>However, in Rust, <em>everything</em> is an expression. (This has nothing to do with
+safety. It is because Rust is heavily influenced by functional programming
+languages, which are outside the scope of this class.) This is valid Rust
+code:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Rust" data-lang="Rust"><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>x<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">if</span><span style="color:#bbb"> </span>someBool<span style="color:#bbb"> </span>{<span style="color:#bbb"> </span><span style="color:#40a070">2</span><span style="color:#bbb"> </span>}<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">else</span><span style="color:#bbb"> </span>{<span style="color:#bbb"> </span><span style="color:#40a070">4</span><span style="color:#bbb"> </span>}<span style="color:#bbb">
+</span></code></pre></div><p>Functions are sequences of expressions separated by semicolons, evaluating to
+the value of the last expression. The <code>sum</code> function above has a single
+expression, <code>a + b</code>, so the <code>sum</code> function will evaluate to (i.e. return)
+whatever <code>a + b</code> ends up being.</p>
+<p>If you had included a semicolon and written the following code, you would
+actually get a compilation error:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Rust" data-lang="Rust"><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">sum</span>(a: <span style="color:#902000">i32</span>,<span style="color:#bbb"> </span>b: <span style="color:#902000">i32</span>)<span style="color:#bbb"> </span>-&gt; <span style="color:#902000">i32</span> {<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>a<span style="color:#bbb"> </span><span style="color:#666">+</span><span style="color:#bbb"> </span>b;<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>Remember that functions are expressions separated by semicolons. As such,
+this function actually contains <em>two</em> expressions: <code>a + b</code> (before the
+semicolon) and an <em>empty</em> expression (after the semicolon). Because the last
+expression is void, this function ends up returning nothing. The compiler
+will give you an error because the function was declared with an <code>i32</code> return
+type.</p>
+<p>Since everything is an expression, you can end up writing functions like this:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Rust" data-lang="Rust"><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">fib</span>(n: <span style="color:#902000">i32</span>)<span style="color:#bbb"> </span>-&gt; <span style="color:#902000">i32</span> {<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">if</span><span style="color:#bbb"> </span>n<span style="color:#bbb"> </span><span style="color:#666">&lt;=</span><span style="color:#bbb"> </span><span style="color:#40a070">1</span><span style="color:#bbb"> </span>{<span style="color:#bbb"> </span>n<span style="color:#bbb"> </span>}<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">else</span><span style="color:#bbb"> </span>{<span style="color:#bbb"> </span>fib(n<span style="color:#666">-</span><span style="color:#40a070">1</span>)<span style="color:#bbb"> </span><span style="color:#666">+</span><span style="color:#bbb"> </span>fib(n<span style="color:#666">-</span><span style="color:#40a070">2</span>)<span style="color:#bbb"> </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>This may end up being one of the weirdest things to get used to coming from
+languages like C, Java, and Python, but it can be an elegant and concise way
+of writing programs once you acclimate. If you’re interested in the
+influences behind this design, consider taking CS 242 (Programming
+Languages)! We will talk more about this syntax next week, so don’t worry too
+much if it’s confusing.</p>
+</li>
+</ul>
+<p>That’s it for syntax we think is crucial for you to know! Let’s write some code!</p>
+<h3 id="practice">Practice</h3>
+<p><em>These exercises were written by Will Crichton for CS 242.</em></p>
+<p><code>cd</code> into <code>part-2-warmup/</code> and have a look at <code>src/main.rs</code>. There are three
+functions you should implement:</p>
+<ul>
+<li>Implement <code>add_n</code>, which takes a vector of numbers and some number <code>n</code>. The
+function should return a new vector whose elements are the numbers in the
+original vector <code>v</code> with <code>n</code> added to each number.</li>
+<li>Implement <code>add_n_inplace</code>, which does the same thing as <code>add_n</code>, but modifies
+<code>v</code> directly (in place) and does not return anything.</li>
+<li>Implement <code>dedup</code> that removes duplicate elements from a vector in-place
+(i.e. modifies <code>v</code> directly). If an element is repeated anywhere in the
+vector, you should keep the element that appears first. You may want to use a
+<a href="https://doc.rust-lang.org/std/collections/struct.HashSet.html">HashSet</a> for
+this.</li>
+</ul>
+<p>At the end of <code>src/main.rs</code>, you’ll find a series of functions marked
+<code>#[test]</code>. These are <em>unit tests</em>, provided to help you verify that your
+functions work correctly. You can run these tests by running <code>cargo test</code>.
+Think of this as a <code>sanitycheck</code> equivalent!</p>
+<p>You must write your solutions by yourself, but you should feel free to Google
+how to do things in Rust. We are also more than happy to answer questions on
+Slack. This is intended to be a friendly, quick warm-up, so if you find
+yourself getting hung up on anything, let us know!</p>
+<h2 id="part-3-hangman">Part 3: Hangman</h2>
+<p>Your goal is to implement a command-line hangman game. The following is an
+example of a possible run of the game:</p>
+<pre><code>Welcome to CS110L Hangman!
+The word so far is -------
+You have guessed the following letters:
+You have 5 guesses left
+Please guess a letter: r
+
+The word so far is ------r
+You have guessed the following letters: r
+You have 5 guesses left
+Please guess a letter: s
+
+The word so far is ---s--r
+You have guessed the following letters: rs
+You have 5 guesses left
+Please guess a letter: t
+
+The word so far is ---st-r
+You have guessed the following letters: rst
+You have 5 guesses left
+Please guess a letter: l
+
+The word so far is l--st-r
+You have guessed the following letters: rstl
+You have 5 guesses left
+Please guess a letter: a
+Sorry, that letter is not in the word
+
+The word so far is l--st-r
+You have guessed the following letters: rstla
+You have 4 guesses left
+Please guess a letter: b
+
+The word so far is l-bst-r
+You have guessed the following letters: rstlab
+You have 4 guesses left
+Please guess a letter: c
+Sorry, that letter is not in the word
+
+The word so far is l-bst-r
+You have guessed the following letters: rstlabc
+You have 3 guesses left
+Please guess a letter: o
+
+The word so far is lobst-r
+You have guessed the following letters: rstlabco
+You have 3 guesses left
+Please guess a letter: e
+
+Congratulations you guessed the secret word: lobster!
+</code></pre><p>Alternatively, you may not have gotten the word:</p>
+<pre><code>Welcome to CS110L Hangman!
+The word so far is --------
+You have guessed the following letters:
+You have 5 guesses left
+Please guess a letter: a
+
+The word so far is --a-----
+You have guessed the following letters: a
+You have 5 guesses left
+Please guess a letter: b
+Sorry, that letter is not in the word
+
+The word so far is --a-----
+You have guessed the following letters: ab
+You have 4 guesses left
+Please guess a letter: c
+
+The word so far is c-a-----
+You have guessed the following letters: abc
+You have 4 guesses left
+Please guess a letter: d
+Sorry, that letter is not in the word
+
+The word so far is c-a-----
+You have guessed the following letters: abcd
+You have 3 guesses left
+Please guess a letter: e
+Sorry, that letter is not in the word
+
+The word so far is c-a-----
+You have guessed the following letters: abcde
+You have 2 guesses left
+Please guess a letter: f
+
+The word so far is c-a-f---
+You have guessed the following letters: abcdef
+You have 2 guesses left
+Please guess a letter: g
+Sorry, that letter is not in the word
+
+The word so far is c-a-f---
+You have guessed the following letters: abcdefg
+You have 1 guesses left
+Please guess a letter: h
+
+The word so far is c-a-f--h
+You have guessed the following letters: abcdefgh
+You have 1 guesses left
+Please guess a letter: i
+
+The word so far is c-a-fi-h
+You have guessed the following letters: abcdefghi
+You have 1 guesses left
+Please guess a letter: j
+Sorry, that letter is not in the word
+
+Sorry, you ran out of guesses!
+</code></pre><p>The program exits either when you correctly complete the word or when you run
+out of guesses.</p>
+<h3 id="advice-and-helpful-hints">Advice and Helpful Hints</h3>
+<ul>
+<li>Remember that variables are immutable by default. If you plan on changing
+your variable in the foreseeable future, you need to mark it as mutable, e.g.
+<code>let mut counter = 0</code>.</li>
+<li>You can compare <code>String</code>s using <code>==</code>.</li>
+<li>Use <code>println!(...)</code> to print things to standard out. To print a variable, you
+can write something like this:
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Rust" data-lang="Rust">println<span style="color:#666">!</span>(<span style="color:#4070a0">"Variable contents: {}"</span>,<span style="color:#bbb"> </span>some_variable);<span style="color:#bbb">
+</span></code></pre></div></li>
+<li>To read input from the user, you can write something like this:
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Rust" data-lang="Rust">print<span style="color:#666">!</span>(<span style="color:#4070a0">"Please guess a letter: "</span>);<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#60a0b0;font-style:italic">// Make sure the prompt from the previous line gets displayed:
+</span><span style="color:#60a0b0;font-style:italic"></span>io::stdout()<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>.flush()<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>.expect(<span style="color:#4070a0">"Error flushing stdout."</span>);<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>guess<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#007020">String</span>::new();<span style="color:#bbb">
+</span><span style="color:#bbb"></span>io::stdin()<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>.read_line(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>guess)<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>.expect(<span style="color:#4070a0">"Error reading line."</span>);<span style="color:#bbb">
+</span></code></pre></div></li>
+<li>You aren’t expected to match our output exactly. Just make a game that works!</li>
+<li>We don’t expect you to worry about error-handling or reprompting. However,
+doing so will give you better practice with the language.</li>
+<li>We haven’t talked about <code>Option</code>s or <code>Result</code>s yet, which are a big part of
+Rust and will be the topic of next week’s lecture. If you Google how to do
+things, you may encounter suggestions that involve calling functions like
+<code>unwrap()</code>. You’re welcome to use such code, but there is probably a simpler
+way to do it. Ping us on Slack and we’d be happy to give you a suggestion.</li>
+<li>The Rust compiler is your friend and enemy. Its criticism is often
+constructive, unlike most C++ compilers :) The Rust team spent a long time
+trying to make error messages as helpful as possible, and we hope you find
+them useful.</li>
+</ul>
+<h2 id="part-4-weekly-survey">Part 4: Weekly survey</h2>
+<p>As you know, this is the first time we’re teaching this class, and we want to
+make it as enjoyable and meaningful of an experience as possible. Please let us
+know how you’re doing using <a href="https://forms.gle/zAJoWUohUumeHfDF7">this survey</a>.</p>
+<p>When you have submitted the survey, you should see a password. Put this code in
+<code>part-4.txt</code> before submitting.</p>
+<h2 id="submitting-your-work">Submitting your work</h2>
+<p>As you work, you may want to <em>commit</em> your code to save a snapshot of your
+work. That way, if anything goes wrong, you can always revert to a previous
+state.</p>
+<p>If you have never used git before, you may need to configure it by running
+these commands:</p>
+<pre><code>git config --global user.name "Firstname Lastname"
+git config --global user.email "yourSunetid@stanford.edu"
+</code></pre><p>Once you’ve done this, you won’t need to do it again.</p>
+<p>Then, to commit your work, run this command:</p>
+<pre><code>git commit -am "Type some title here to identify this snapshot!"
+</code></pre><p>In order to submit your work, commit it, then run <code>git push</code>. This will upload
+your commits (snapshots) to Github, where we can access them. You can verify
+that your code is submitted by visiting
+<a href="https://github.com/cs110l/week1-yourSunetid">https://github.com/cs110l/week1-yourSunetid</a> and browsing the code there. You
+can <code>git push</code> as many times as you’d like.</p>
+<h2 id="grading">Grading</h2>
+<p>There are four components to this assignment, each worth 25%. You’ll earn the
+full 25% for each part if we can see that you’ve made a good-faith effort to
+complete it.</p>
+
+</div>
+
+    
+
+
+</body></html>

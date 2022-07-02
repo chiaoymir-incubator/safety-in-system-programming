@@ -1,0 +1,121 @@
+
+<!-- saved from url=(0071)https://reberhardt.com/cs110l/spring-2020/assignments/week-5-exercises/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+        <script async="" src="./CS 110L_ Safety in Systems Programming_files/analytics.js"></script><script src="./CS 110L_ Safety in Systems Programming_files/BSCVfTNTG-yWNgHeuCpu_OptETQ.js"></script><link href="./CS 110L_ Safety in Systems Programming_files/css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/review.css">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/codemirror.css">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/style.css">
+        <title>CS 110L: Safety in Systems Programming</title>
+    </head>
+    <body>
+
+
+        <div class="page-header-container collapsed">
+            <div class="navbar">
+                <div class="navbar-contents">
+                    <div class="nav-home">
+                        <h3><a href="https://reberhardt.com/cs110l/spring-2020/">CS 110L</a></h3>
+                    </div>
+                    <ul>
+    <li><a href="https://reberhardt.com/cs110l/spring-2020/pages/schedule/">Schedule</a></li>
+    <li><a href="https://cs110l.slack.com/">Slack</a></li>
+    
+    
+    
+</ul>
+
+                </div>
+                <div class="old-class-warning">
+                    ⚠️ Heads up! You're looking at an old class website. <a href="https://cs110l.stanford.edu/">Click here for the latest version of this class.</a> ⚠️
+                </div>
+            </div>
+        </div>
+
+
+
+<div class="content">
+    <h1>Week 5 Exercises: Farm meets multithreading</h1>
+
+    <p>Excellent job on making it past the halfway point of the quarter! We’re so
+proud of all of your progress, and we hope you feel accomplished as well!</p>
+<p>The goal of this week’s exercise is to get you thinking about multithreading
+material and to help you ask questions about lecture material that still feels
+confusing. Please ask questions! The exercise is designed to be light in order
+to give you time to focus on Project 1, and should take approximately an hour.</p>
+<p><strong>Due date:</strong> Saturday, May 16, 11:59pm (Pacific time)</p>
+<p>We can extend this deadline for you if you are having a really rough week.
+Message us letting us know what’s up, and we’d be happy to work with you!</p>
+<p><em>Ping us on Slack if you are having difficulty with this assignment. We would
+love to help clarify any misunderstandings, and we want you to sleep!</em></p>
+<h2 id="getting-the-code">Getting the code</h2>
+<p>The starter code is available on GitHub
+<a href="https://github.com/reberhardt7/cs110l-spr-2020-starter-code">here</a>.</p>
+<h2 id="part-1-farm">Part 1: Farm</h2>
+<p>This week, we’ll take a stab at implementing a simplified version of <code>farm</code>
+from your CS 110 assignment 3. One twist: we’ll use multithreading instead of
+multiprocessing!</p>
+<p>This version of <code>farm</code> will receive the numbers to factor using command line
+arguments instead of reading from <code>stdin</code>. It can be run like so:</p>
+<pre><code>🍉 cargo run 12345678 12346789 34567890 45678902
+    Finished dev [unoptimized + debuginfo] target(s) in 0.29s
+     Running `target/debug/farm 12345678 12346789 34567890 45678902`
+Farm starting on 8 CPUs
+12345678 = 2 * 3 * 3 * 47 * 14593 [time: 420.687768ms]
+12346789 = 7 * 13 * 19 * 37 * 193 [time: 678.612537ms]
+34567890 = 2 * 3 * 5 * 7 * 97 * 1697 [time: 1.176596148s]
+45678902 = 2 * 433 * 52747 [time: 1.812403818s]
+Total execution time: 1.812585221s
+</code></pre><p>You can implement this version of <code>farm</code> in three steps:</p>
+<ul>
+<li>First, establish the queue of numbers to factor. You will want to use the
+<code>get_input_numbers()</code> function that we have provided. You may draw on lecture
+examples to make this queue safe to access from multiple threads.</li>
+<li>Spawn <code>num_threads</code> worker threads. In each thread, using a loop, pop a
+number off the queue and factor that number (by calling <code>factor_number</code>)
+until no numbers remain on the queue.
+<ul>
+<li>You should be careful to think about when the thread holds the mutex.
+You’ll need to hold the mutex while accessing the queue, but you should
+not hold it when factoring a number to avoid serializing the work. We
+highly recommend writing a helper function that borrows a reference to
+your <code>Mutex&lt;VecDeque&lt;u32&gt;&gt;</code>, pops a number from the front of the queue,
+and returns <code>Option&lt;u32&gt;</code> (note that <code>VecDeque::pop_front</code> conveniently
+returns <code>Option&lt;u32&gt;</code>). This way, the lock is only held for the duration
+of that function. You can tell the queue has become empty when that
+function returns <code>None</code>.</li>
+</ul>
+</li>
+<li>Wait for all of your threads to finish by calling <code>thread.join()</code> on each of
+them. If you don’t do this, your program will compile fine, but you may have
+problems where some numbers are missing from the output because the program
+exited before the threads could finish.</li>
+</ul>
+<p>It may be helpful for you to reference the ticket agents Attempt 3 code from
+Lecture 10.</p>
+<p>When you run your program, pay attention to the total execution time printed at
+the end of the program. If it is significantly longer than the time taken to
+factor any one number, you may be accidentally serializing your program by
+holding a lock for too long.</p>
+<p><em>Fun fact:</em> This implementation is made significantly easier by the fact that
+we have all the numbers to factor up front (from <code>argv</code>) instead of receiving
+them at some point via <code>stdin</code>. Your CS 110 <code>farm</code> implementation needed to
+contend with the fact that an empty queue does <em>not</em> mean workers can exit
+(they need to stick around in case another number arrives later via <code>stdin</code>).
+Here, workers can pull numbers directly off the queue (there is no main process
+broadcasting numbers to workers), and workers can exit as soon as the queue
+becomes empty, since there is no way for additional numbers to come in. In the
+coming weeks, you’ll learn how to manage worker threads in cases where
+additional work might arrive after a queue becomes empty, and you’ll implement
+such a program in CS 110 assignment 6.</p>
+<h2 id="part-2-weekly-survey">Part 2: Weekly survey</h2>
+<p>Please let us know how you’re doing using <a href="https://forms.gle/Tcoag7EfRzxetu9dA">this survey</a>.</p>
+<p>When you have submitted the survey, you should see a password. Put this code in
+<code>survey.txt</code> before submitting.</p>
+
+</div>
+
+    
+
+
+</body></html>

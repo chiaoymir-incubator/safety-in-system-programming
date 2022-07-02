@@ -1,0 +1,617 @@
+
+<!-- saved from url=(0064)https://reberhardt.com/cs110l/spring-2020/assignments/project-2/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+        <script async="" src="./CS 110L_ Safety in Systems Programming_files/analytics.js"></script><script src="./CS 110L_ Safety in Systems Programming_files/BSCVfTNTG-yWNgHeuCpu_OptETQ.js"></script><link href="./CS 110L_ Safety in Systems Programming_files/css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/review.css">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/codemirror.css">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/style.css">
+        <title>CS 110L: Safety in Systems Programming</title>
+    </head>
+    <body>
+
+
+        <div class="page-header-container collapsed">
+            <div class="navbar">
+                <div class="navbar-contents">
+                    <div class="nav-home">
+                        <h3><a href="https://reberhardt.com/cs110l/spring-2020/">CS 110L</a></h3>
+                    </div>
+                    <ul>
+    <li><a href="https://reberhardt.com/cs110l/spring-2020/pages/schedule/">Schedule</a></li>
+    <li><a href="https://cs110l.slack.com/">Slack</a></li>
+    
+    
+    
+</ul>
+
+                </div>
+                <div class="old-class-warning">
+                    ⚠️ Heads up! You're looking at an old class website. <a href="https://cs110l.stanford.edu/">Click here for the latest version of this class.</a> ⚠️
+                </div>
+            </div>
+        </div>
+
+
+
+<div class="content">
+    <h1>Project 2: Balancebeam</h1>
+
+    <p>Networked services are everywhere, and keeping them running is a critical task:
+communications, credit card processing, the power grid, and much more all
+depend on networking infrastructure. Load balancers are a crucial component for
+providing scalability and availability to networked services, and in this
+assignment, you’ll feel out the internals of a load balancer and learn what
+makes them tick!</p>
+<p>This project will give you practice with multithreading, asynchronous
+programming, and performance optimization. Conceptually, there is a lot of
+overlap between this assignment and the CS 110 proxy assignment (which is the
+last assignment this quarter), so you’ll get a good chance to compare and
+contrast similar C++ and Rust code. At the same time, you’ll find the goals of
+this project to be quite different from the CS 110 proxy, and you’ll get
+experience making open-ended design decisions and measuring the performance
+results. We hope you enjoy working on this and are able to reflect on how much
+you’ve learned this quarter!</p>
+<h2 id="logistics">Logistics</h2>
+<p>This project is due on <strong>Wednesday, June 10 at 11:59PM pacific time</strong>. If you
+might have difficulty meeting that deadline, please contact us ahead of time
+and we can give you an extension.</p>
+<p><em><strong>Note:</strong></em> We will accept submissions until Saturday, June 13 at 11:59PM with no
+penalty. Please see our announcement
+<a href="https://cs110l.slack.com/archives/C011F619F60/p1590994627008600">here</a>. We
+hope you and your families are safe.</p>
+<p>You may work with a partner if you would like. You can find partners in
+the <a href="https://cs110l.slack.com/archives/C0114678JUA/p1590535598001500">#project-2 partner thread</a>
+on Slack.</p>
+<p>This project is more open-ended than previous assignments in this class, and
+you will find that there are many ways to implement each task. You are welcome
+(and encouraged) to discuss your implementation strategies on Slack.</p>
+<p>Also, if you would be interested in working on a different project, let us
+know! This is a small class and we would love to support your individual
+interests.</p>
+<h3 id="working-with-a-partner">Working with a partner</h3>
+<p>If you work with a partner, only one person should submit. You should add a
+comment to the top of <code>main.rs</code> including both partners’ names and sunet IDs
+(Stanford usernames). Message us on Slack and we can add your partner to your
+Github repository (or vice versa).</p>
+<p>We <em>strongly, strongly</em> recommend that you do <em>not</em> simply split up the
+milestones below, but rather work together through all the work. This project
+is sufficiently complex that both of you need to understand all the parts
+involved, and we think you will benefit the most if you work closely with your
+partner to figure out how to solve problems and structure your code instead of
+working separately. If at all possible, try working together synchronously over
+an audio or video call.</p>
+<p>Git is the industry-standard tool for collaborating on a codebase. Using it to
+collaborate is more difficult than using it as a sole developer (you’ll need to
+learn how to avoid and resolve merge conflicts when two people edit the same
+code at the same time). However, if you take time to learn how to use git
+properly, that experience will benefit you for years to come! Again, message us
+and we can add your partner to your Github repository (or vice versa).</p>
+<p>However, git is mostly oriented for teams where people are working on different
+parts of a codebase. Using it to collaborate on the same parts of the code at
+the same time can be difficult, because doing so creates merge conflicts (you
+edit a file, your partner edits the same file, and then you try to sync your
+changes and <code>git</code> doesn’t know what to do with the two sets of changes). From
+my experience, the best way to collaborate synchronously is to use an editor
+plugin that implements Google Docs-style sharing. Here are some that I found
+from a quick Google search:</p>
+<ul>
+<li>VSCode: <a href="https://visualstudio.microsoft.com/services/live-share/">Live Share</a>
+looks really, really awesome.</li>
+<li><a href="https://floobits.com/">Floobits</a> has plugins for IntelliJ, Sublime, Atom,
+and others. You can get free private workspaces by using an <a href="https://floobits.com/edu">education
+account</a>.</li>
+<li><a href="https://www.codetogether.com/">CodeTogether</a> is one I haven’t heard of
+before, but they’re offering all features for free during the COVID-19
+pandemic. May be worth checking out if you don’t like the other options.</li>
+<li><a href="https://teamhub.dev/">TeamHub</a> looks similar, but it looks like it’s in
+beta and you’d need to request an invite.</li>
+</ul>
+<h4 id="tips-for-working-with-git">Tips for working with git</h4>
+<ul>
+<li>A merge conflict happens when two people change the same part of a file (e.g.
+the same function). It won’t happen if you make a change at the top of file A
+and your partner makes a change at the bottom of file A. If possible,
+coordinate changes with your partner so that you aren’t touching the same
+code at the same time.
+<ul>
+<li>That said, if a merge conflict happens, it’s not the end of the world.
+Merge conflicts are common, and there are great tools built for resolving
+them.</li>
+</ul>
+</li>
+<li>Make frequent, small commits. A gigantic commit is very likely to create
+merge conflicts! Also, if you break something, it’s easier to go back and fix
+it if you’ve been making incremental commits along the way. You can always
+merge small commits into bigger ones, but you can’t easily split large
+commits into smaller ones.</li>
+<li>Write good commit messages. Not only will this help your partner understand
+the changes you made, but it will also help in resolving merge conflicts,
+since you can more quickly understand what changes are conflicting.
+<a href="https://chris.beams.io/posts/git-commit/">Here’s</a> an article about commit
+message style.</li>
+<li>Push and pull often. It’s always a nightmare when two people independently
+make a large number of changes, then attempt to push and are forced to
+resolve a stack of 15 commits.</li>
+<li>Say you have made some commits, and your partner just pushed their commits to
+the server. You won’t be able to push your commits until you pull their
+commits and reconcile them with your changes. If you run <code>git pull</code>, <code>git</code>
+will download their commits and attempt to merge them with yours. If
+successful, it will commit a new “merge commit” that merges the two sets of
+changes. However, if you do this often, your git history will end up
+cluttered with merge commits. I prefer to run <code>git pull --rebase</code>, which
+downloads your partner’s changes, then re-commits your changes <em>on top of
+them</em>. It avoids creating merge commits in the history.</li>
+<li>Branches are a useful feature of git that allow contributors to establish
+separate “threads of development” in a codebase. However, since this project
+is small and since the milestones should be completed in order, we recommend
+against using branches here. If you’re curious (you will inevitably encounter
+branches in the future), <a href="https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell">this
+article</a>
+gives a good summary, and <a href="https://learngitbranching.js.org/?locale=en_US">this
+website</a> has a great
+interactive visualization of how branches work.</li>
+</ul>
+<h2 id="getting-set-up">Getting set up</h2>
+<p>The starter code is available on GitHub
+<a href="https://github.com/reberhardt7/cs110l-spr-2020-starter-code">here</a>.</p>
+<p>Unlike the last project, you can work on this project directly on your computer
+without any tools like Docker. If you would like to work on <code>myth</code> or <code>rice</code>,
+you are certainly welcome to.</p>
+<p>Throughout this project, <strong>please take notes on your experience:</strong> What did you
+try? What worked? What didn’t? We’ll ask you to write a reflection at the end
+of the assignment.</p>
+<h2 id="milestone-0-read-the-starter-code">Milestone 0: Read the starter code</h2>
+<p>The starter code implements a single-threaded reverse proxy. (We considered
+having you implement it, but wanted to give you time to focus on the more
+interesting parts, and you’ll be implementing a proxy in CS 110 anyways.) If
+you’re running the code locally, you can take it for a spin. Start the load
+balancer like so:</p>
+<pre><code>cargo run -- --upstream 171.67.215.200:80
+</code></pre><p>Then, visit
+<a href="http://localhost:1100/class/cs110l/">http://localhost:1100/class/cs110l/</a> in
+your web browser. (This will be harder to do if you are running the server on
+<code>myth</code> or <code>rice</code>, but fear not; there are many other ways to test the server
+that will be described in this handout.)</p>
+<p>This is configuring the load balancer to forward requests to a single <em>upstream
+server</em> (the server operating <code>web.stanford.edu</code>). When your browser opens a
+connection to balancebeam, balancebeam opens a connection to
+<code>web.stanford.edu</code>; then, when your browser sends requests over the connection,
+balancebeam passes them along, and when <code>web.stanford.edu</code> sends responses,
+balancebeam relays them to your browser.</p>
+<p>Let’s have a look at the code that implements this, starting in <code>main.rs</code>. You
+should be sure to understand the code in <code>main.rs</code> thoroughly, as you will be
+making substantial changes over the course of the assignment.</p>
+<p>The <code>CmdOptions</code> struct uses some fancy macros to do command-line argument
+parsing. Any command-line arguments supplied to the program end up in this
+struct in <code>main()</code>:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#60a0b0;font-style:italic">// Parse the command line arguments passed to this program
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>options<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>CmdOptions::parse();<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">if</span><span style="color:#bbb"> </span>options.upstream.len()<span style="color:#bbb"> </span><span style="color:#666">&lt;</span><span style="color:#bbb"> </span><span style="color:#40a070">1</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>log::error<span style="color:#666">!</span>(<span style="color:#4070a0">"At least one upstream server must be specified using the --upstream option."</span>);<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>std::process::exit(<span style="color:#40a070">1</span>);<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>The <code>ProxyState</code> struct is useful for storing information about the state of
+balancebeam. Currently, it only stores information pulled directly from
+<code>CmdOptions</code>, but in later milestones, you will want to add more fields to this
+struct so that different threads can more easily share information.</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#4070a0;font-style:italic">/// Contains information about the state of balancebeam (e.g. what servers we are currently proxying
+</span><span style="color:#4070a0;font-style:italic">/// to, what servers have failed, rate limiting counts, etc.)
+</span><span style="color:#4070a0;font-style:italic">///
+</span><span style="color:#4070a0;font-style:italic">/// You should add fields to this struct in later milestones.
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">ProxyState</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#4070a0;font-style:italic">/// How frequently we check whether upstream servers are alive (Milestone 4)
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">    </span><span style="color:#007020">#[allow(dead_code)]</span><span style="color:#bbb">
+</span><span style="color:#bbb">    </span>active_health_check_interval: <span style="color:#902000">usize</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#4070a0;font-style:italic">/// Where we should send requests when doing active health checks (Milestone 4)
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">    </span><span style="color:#007020">#[allow(dead_code)]</span><span style="color:#bbb">
+</span><span style="color:#bbb">    </span>active_health_check_path: <span style="color:#007020">String</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#4070a0;font-style:italic">/// Maximum number of requests an individual IP can make in a minute (Milestone 5)
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">    </span><span style="color:#007020">#[allow(dead_code)]</span><span style="color:#bbb">
+</span><span style="color:#bbb">    </span>max_requests_per_minute: <span style="color:#902000">usize</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#4070a0;font-style:italic">/// Addresses of servers that we are proxying to
+</span><span style="color:#4070a0;font-style:italic"></span><span style="color:#bbb">    </span>upstream_addresses: <span style="color:#007020">Vec</span><span style="color:#666">&lt;</span><span style="color:#007020">String</span><span style="color:#666">&gt;</span>,<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>After parsing the command line arguments, <code>main()</code> creates a server socket so
+that it can begin listening for connections:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>listener<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">match</span><span style="color:#bbb"> </span>TcpListener::bind(<span style="color:#666">&amp;</span>options.bind)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020">Ok</span>(listener)<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>listener,<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020">Err</span>(err)<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>log::error<span style="color:#666">!</span>(<span style="color:#4070a0">"Could not bind to {}: {}"</span>,<span style="color:#bbb"> </span>options.bind,<span style="color:#bbb"> </span>err);<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>std::process::exit(<span style="color:#40a070">1</span>);<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>};<span style="color:#bbb">
+</span><span style="color:#bbb"></span>log::info<span style="color:#666">!</span>(<span style="color:#4070a0">"Listening for requests on {}"</span>,<span style="color:#bbb"> </span>options.bind);<span style="color:#bbb">
+</span></code></pre></div><p>Then, as connections come in, it calls the <code>handle_connection()</code> function,
+passing a <a href="https://doc.rust-lang.org/std/net/struct.TcpStream.html">TcpStream</a>
+(“client socket” in CS 110 terms – an “internet pipe” connected to the
+client).</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>stream<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">in</span><span style="color:#bbb"> </span>listener.incoming()<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>stream<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>stream.unwrap();<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#60a0b0;font-style:italic">// Handle the connection!
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">    </span>handle_connection(stream,<span style="color:#bbb"> </span><span style="color:#666">&amp;</span>state);<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>The <code>handle_connection</code> is a little long, but it is not too conceptually
+complex:</p>
+<ul>
+<li>First, it selects a random upstream server and opens a connection to that
+server. (If the server is dead, it informs the client with a 502 Bad Gateway
+error.)</li>
+<li>Then, it begins infinitely looping, trying to read requests from the client.
+The client may send any number of requests over a single connection, and
+balancebeam is expected to relay each of them to the upstream server. There
+is some error handling in case the client sends a malformed request.</li>
+<li>Once the request has been read, balancebeam adds an X-Forwarded-For HTTP
+header so that the upstream server can know the client’s IP address. (This
+isn’t particularly important to understand; it’s simply a de-facto standard
+header.)</li>
+<li>Next, balancebeam relays the request to the upstream server. If there is an
+error in transmitting the request, it informs the client.</li>
+<li>Next, balancebeam tries to read the response from the upstream server. If the
+response is corrupt or there is some other problem in receiving it, it
+informs the client.</li>
+<li>Finally, balancebeam forwards the response to the client.</li>
+</ul>
+<p>Throughout this code, you may see calls like <code>log::debug!</code> or <code>log::info!</code>.
+This is effectively just printing to the terminal, but it is also colorizing
+the output to make it easier to differentiate important log lines (e.g. errors)
+from less important log lines (e.g. lines just helpful for debugging if
+something goes wrong). You may continue using <code>print!</code> if you like, but the
+logger is available for your convenience. The log levels are <code>log::debug!</code>,
+<code>log::info!</code>, <code>log::warn!</code>, and <code>log::error!</code>.</p>
+<h3 id="requestrs-and-responsers">request.rs and response.rs</h3>
+<p>Frustratingly, we discovered Rust does not have many crates for parsing HTTP
+requests and responses. The crates that are available are either too high-level
+(implementing major functionality that we want you to implement for this
+assignment) or too low-level (requiring a lot of extra code to use). We ended
+up using two libraries. <a href="https://docs.rs/httparse/1.3.4/httparse/"><code>httparse</code></a>
+is a low-level library that does HTTP parsing but requires a lot of extra code
+to be functional. <a href="https://docs.rs/http/0.2.1/http/"><code>http</code></a> is a library that
+provides
+<a href="https://docs.rs/http/0.2.1/http/request/struct.Request.html"><code>Request</code></a> and
+<a href="https://docs.rs/http/0.2.1/http/response/struct.Response.html"><code>Response</code></a>
+structs that can be used to store HTTP requests/responses, but does not
+actually provide any code to create these objects by parsing data or to send
+stored requests/responses by serializing these structs to a TcpStream. (It
+doesn’t even have a <code>toString</code> function!) We ended up writing a lot of glue
+code to combine these two libraries, and this code is provided for you in
+<code>request.rs</code> and <code>response.rs</code>.</p>
+<p>Notably, <code>request.rs</code> and <code>response.rs</code> export <code>read_from_stream</code> functions to
+read and parse <code>http::Request</code> and <code>http::Response</code> objects from the bytes sent
+by the client or server, along with <code>write_to_stream</code> functions to serialize
+<code>http::Request</code> or <code>http::Response</code> and send that to the client or server.
+These functions each first call <code>read_headers</code>, which reads bytes from the
+client and tries to see whether the bytes received so far form a valid HTTP
+request up until the end of the headers, as well as <code>read_body</code>, which reads
+bytes from the client until we have finished reading the full body for a
+request.</p>
+<p><code>response.rs</code> also provides a <code>make_http_error</code> function that generates an
+<code>http::Response</code> with the provided HTTP status code. If you want to send an
+error to the client, you can call this function to create an <code>http::Response</code>,
+then use <code>response::write_to_stream</code> to send it to the client.</p>
+<p>These files are more complicated to follow than <code>main.rs</code>, as they rely on an
+understanding of the HTTP protocol, but we have tried to add comments in the
+right places to make them easier to read. You don’t need to understand them in
+depth. You will be modifying some of the functions in Milestone 2, but we will
+walk you through the process.</p>
+<h3 id="testing">Testing</h3>
+<p>We have provided a full test suite so that you do not need to run balancebeam
+with an upstream server and figure out how to send HTTP requests yourself. The
+following tests should pass out of the box:</p>
+<pre><code>cargo test --test 01_single_upstream_tests
+cargo test --test 02_multiple_upstream_tests test_load_distribution
+</code></pre><p>As you work on later milestones, you should make sure that these tests continue
+to pass. We have tried to add good logging in the tests so that you can figure
+out what a failing test is trying to do, but if you want to see the source code
+for the tests, you can find it in the <code>tests/</code> directory.</p>
+<p>Additionally, we have set up some infrastructure that runs performance tests on
+your implementations so that you can get a sense for the performance impacts
+your design decisions have. Every time you commit and push your code (don’t
+forget to push), <a href="https://balancebench.reberhardt.com/">balancebench</a> will spin
+up a cluster of servers and run performance tests on your balancebeam
+implementation. It will send you a Slack message with a link to see the
+performance history across your git commits. We hope this is helpful for
+providing a dimension to your design thinking beyond a simple “it works!".
+You’ll find that subtly different design decisions can have a huge impact on
+the performance and scalability of your server, and we hope you’ll see that
+through the benchmark results.</p>
+<p>You can see everyone’s results on the leaderboard
+<a href="https://balancebench.reberhardt.com/">here</a>. Everyone’s repository is
+anonymized under a randomly-generated name (you’ll need the link from the
+Slackbot in order to see commit history and detailed results). If you would
+like to change your name, let us know and we can customize that for you!</p>
+<p>At the top of the leaderboard, you’ll see <a href="https://www.nginx.com/">Nginx</a>,
+which is a popular open-source web server and load balancer. Nginx was one of
+the first mainstream web servers to start using nonblocking I/O, as it was
+designed to solve the “C10K problem” in the early 2000s (how do you build a web
+server that can handle 10k concurrent connections?). We don’t expect anyone to
+beat Nginx’s performance (we will be quite surprised if this happens), but we
+wanted to provide a reference for the kind of performance a production server
+achieves.</p>
+<h2 id="milestone-1-add-multithreading">Milestone 1: Add multithreading</h2>
+<p>Your first task is to improve balancebeam’s performance by using
+multithreading. You may do this however you like:</p>
+<ul>
+<li>You could modify <code>main()</code> to handle each connection in a separate thread.</li>
+<li>You could use a <a href="https://docs.rs/threadpool/1.8.1/threadpool/">ThreadPool</a> to
+reuse threads between requests</li>
+<li>Got any other ideas?</li>
+</ul>
+<p>Each of these approaches has different performance tradeoffs. Which approach
+will work better? Try them out and see what happens on balancebench!</p>
+<p>In doing this, you will need to think about the information you are sharing
+between threads. You will need to ensure that the <code>ProxyState</code> struct can be
+safely shared. You may not need to use any mutexes or channels if you are not
+modifying data, but you are welcome to think ahead about how you might want to
+use these when you implement Milestone 3.</p>
+<p>At the end of this milestone, make sure that balancebeam is still working for
+distributing requests:</p>
+<pre><code>cargo test --test 01_single_upstream_tests
+cargo test --test 02_multiple_upstream_tests test_load_distribution
+</code></pre><h2 id="milestone-2-use-asynchronous-io">Milestone 2: Use asynchronous I/O</h2>
+<p><em>Note: If you’re on top of things and are getting to this before Thursday’s
+lecture, you are welcome to go onto the next milestones and come back to this
+later.</em></p>
+<p>Once you have multithreading working, it’s time to take a stab at using
+nonblocking tasks instead. We’d like for you to contrast between multithreaded
+and asynchronous code – and performance!</p>
+<p>In this milestone, you should convert the codebase to use nonblocking I/O and
+lightweight Tokio tasks instead of threads. In many other languages, this would
+be a monumental task, but we think you will be pleasantly surprised at how easy
+it is when using Tokio and async/await syntax!</p>
+<p>In <code>request.rs</code> and <code>response.rs</code>, you should convert <code>std::net::TcpStream</code> to
+<code>tokio::net::TcpStream</code> and <code>std::io::{Read, Write}</code> to
+<code>tokio::io::{AsyncReadExt, AsyncWriteExt}</code>. Then, you’ll need to update
+<code>read_headers</code>, <code>read_body</code>, <code>read_from_stream</code>, and <code>write_to_stream</code>, as
+these are the functions that contain blocking I/O operations. Convert each of
+those functions to an <code>async</code> function. When calling <code>TcpStream::read</code> and
+<code>TcpStream::write</code>, add <code>.await</code> at the end of each <code>read</code> or <code>write</code> call. In
+<code>read_from_stream</code>, add <code>.await</code> at the end of the <code>read_headers</code> and
+<code>read_body</code> calls, as these are now asynchronous functions.</p>
+<p>In <code>main.rs</code>, you should swap <code>std::net::{TcpListener, TcpStream}</code> for
+<code>tokio::net::{TcpListener, TcpStream}</code>, make <code>main()</code> <code>async</code> and add
+<code>#[tokio::main]</code> on the line before it, and convert the request processing code
+to be asynchronous. You may find the
+<a href="https://docs.rs/tokio/0.2.21/tokio/net/struct.TcpListener.html">TcpListener documentation</a>
+to be helpful. Any code you wrote in Milestone 1 will also need to be
+converted.  You should spawn Tokio tasks instead of spawning threads. If you
+used a ThreadPool, you can remove it and spawn a task for each request; the
+purpose of a ThreadPool is to reuse threads (which are expensive to spawn), but
+Tokio tasks are lightweight and do not have this expense.</p>
+<p>As you are working through this milestone, beware that Googling things may give
+you outdated results. Rust introduced <code>async</code>/<code>await</code> syntax in 2017-2018 and
+the feature was not released in stable Rust until November 2019, so we are
+really working on the bleeding edge here. Tokio also underwent a significant
+rewrite in early 2018, so any Tokio documentation prior to that is stale.</p>
+<p>If you Google documentation, make sure to keep an eye on the upper left corner
+of the documentation pages and ensure you are on the latest version. Watch out
+for things like this:</p>
+<p><img src="./CS 110L_ Safety in Systems Programming_files/stale-documentation.png" alt="“This release has been yanked, go to latest version”"></p>
+<p>Tip: If you get unexpected error messages with the word “future” in them,
+chances are you forgot to <code>.await</code> on a function before using its return value.
+(The compiler provides a helpful hint, even though the “found opaque type”
+error may be confusing at first.) Example errors look like this:</p>
+<pre><code>error[E0308]: mismatched types
+   --&gt; tests/02_multiple_upstream_tests.rs:132:20
+    |
+132 |     upstreams.push(SimpleServer::new_at_address(failed_ip));
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |                    |
+    |                    expected struct `common::simple_server::SimpleServer`, found opaque type
+    |                    help: consider using `.await` here: `SimpleServer::new_at_address(failed_ip).await`
+    |
+   ::: tests/common/simple_server.rs:46:62
+    |
+46  |     pub async fn new_at_address(bind_addr_string: String) -&gt; SimpleServer {
+    |                                                              ------------ the `Output` of this `async fn`'s found opaque type
+    |
+    = note:   expected struct `common::simple_server::SimpleServer`
+            found opaque type `impl std::future::Future`
+</code></pre><p>Again, at the end of this milestone, ensure the basic balancebeam features are
+still working:</p>
+<pre><code>cargo test --test 01_single_upstream_tests
+cargo test --test 02_multiple_upstream_tests test_load_distribution
+</code></pre><h2 id="milestone-3-failover-with-passive-health-checks">Milestone 3: Failover with passive health checks</h2>
+<p>At this point, your load balancer should be pretty scalable. Let’s work on
+adding some more availability to our infrastructure!</p>
+<p>In this milestone, we will begin to implement <em>failover</em>: when one of the
+upstream servers fails, we should redirect its traffic to any remaining
+upstream servers so that clients experience minimal disruptions. Remember that
+when a client connects to balancebeam, balancebeam tries to connect to a random
+upstream server. We’ll first implement a simple mechanism for detecting when an
+upstream server has failed: if connecting to the upstream fails, we can assume
+that the upstream server is dead, and we can pick a different upstream server.</p>
+<p>Modify your balancebeam implementation to keep track of dead upstream servers
+and to proxy clients only to the live upstreams. If a client connects and the
+first upstream balancebeam selects is dead, balancebeam should mark that
+upstream as dead and then pick a different upstream. Clients should only
+receive an error if <em>all</em> upstreams are dead.</p>
+<p>You have several choices in how to track failed upstreams:</p>
+<ul>
+<li>You could use a mutex over some field in the ProxyState. The interface for
+Tokio’s <a href="https://tokio-rs.github.io/tokio/doc/tokio/sync/struct.Mutex.html">Mutex</a>
+is almost identical to the standard library’s.</li>
+<li>You could use a
+<a href="https://docs.rs/tokio/0.2.21/tokio/sync/struct.RwLock.html">read-write lock</a>
+instead of a mutex, so that tasks don’t block each other if they are all
+reading. (Only writers block.)</li>
+<li>You could have each thread maintain its own set of failed upstreams, and use
+channels so that a task can broadcast to every other task when an upstream
+fails. The
+<a href="https://docs.rs/async-std/1.6.0/async_std/sync/fn.channel.html">channel in the async_std crate</a>
+is an asynchronous version of crossbeam channels.</li>
+<li>These are the approaches we thought of, but there may be other good ones as
+well!</li>
+</ul>
+<p>Again, each approach has different tradeoffs. For example, using a mutex may be
+the easiest to program, but will almost certainly create lock contention
+between tasks under load. Feel free to discuss tradeoffs on Slack and to pick
+any approach you like!</p>
+<p>At the end of this milestone, you should pass the <code>test_passive_health_checks</code>
+test:</p>
+<pre><code>cargo test passive_health_checks
+</code></pre><p>You can run all of the tests up until this point using this command:</p>
+<pre><code>cargo test -- \
+    --skip test_active_health_checks_check_http_status \
+    --skip test_active_health_checks_restore_failed_upstream \
+    --skip test_rate_limiting
+</code></pre><h2 id="milestone-4-failover-with-active-health-checks">Milestone 4: Failover with active health checks</h2>
+<p>Passive health checks are convenient, but they have limitations. Sometimes,
+servers fail in such a way that they can still establish connections, but they
+fail to service requests. For example, an application server might lose contact
+with the database server; it may establish initial connections with a client,
+but fails to process any request that relies on the database.</p>
+<p>Application servers will commonly implement <em>health check endpoints</em>. A load
+balancer or service monitor (e.g. <a href="https://www.githubstatus.com/">Github
+status</a>) can make requests to these health check
+paths, and the server will do a quick self-test (e.g. doing some database
+operations) to make sure everything is functioning as expected. If the health
+check returns HTTP 200, the load balancer can be more confident that the
+upstream server is working, but if it returns something else, the load balancer
+can take it out of the rotation.</p>
+<p>Performing periodic health checks also has the benefit that the load balancer
+can restore a failed upstream if it starts working again. An upstream server
+may temporarily go down if it gets overloaded or crashes or is rebooted, but
+the load balancer can periodically try making requests, and if the server
+starts responding successfully again, the upstream can start using it again.</p>
+<p>In this milestone, you are to send a request to each upstream at
+<code>active_health_check_path</code> every <code>active_health_check_interval</code>. If a failed
+upstream returns HTTP 200, put it back in the rotation of upstream servers. If
+an online upstream returns a non-200 status code, mark that server as failed.</p>
+<p>As with previous milestones, there are several ways you can implement this
+functionality. Feel free to discuss!</p>
+<p>At the end of this milestone, you should pass the
+<code>test_active_health_checks_restore_failed_upstream</code> and
+<code>test_active_health_checks_check_http_status</code> tests:</p>
+<pre><code>cargo test active_health_checks
+</code></pre><p>You can run all of the tests up until this point using this command:</p>
+<pre><code>cargo test -- --skip test_rate_limiting
+</code></pre><p><em>Tip:</em> You can construct a request from scratch for some destination <code>upstream</code>
+server and <code>path</code> using this code:</p>
+<pre><code>let request = http::Request::builder()
+    .method(http::Method::GET)
+    .uri(path)
+    .header("Host", upstream)
+    .body(Vec::new())
+    .unwrap();
+</code></pre><p>You can then use <code>request::write_to_stream</code> to send it to the server.</p>
+<h2 id="milestone-5-rate-limiting">Milestone 5: Rate limiting</h2>
+<p><em>Rate limiting</em> is the practice of limiting the rate at which clients can send
+requests. This can help prevent a service from being accidentally or
+intentionally overwhelmed. For example, a Denial of Service attack involves
+sending large amounts of traffic to a server in order to disable it; rate
+limiting can help by preventing large-volume attack traffic from reaching the
+application servers. Rate limiting is also used to prevent abuse, such as
+credential stuffing attacks, when an attacker attempts to brute-force guess
+usernames and passwords. Sometimes, rate limiting is even made part of a
+business model! For example, the Google Maps API allows other applications to
+make requests for maps information, but it charges per request and imposes
+limits on request rate per billing tier.</p>
+<p>In this milestone, you will implement basic rate limiting by IP address. The
+<code>max_requests_per_minute</code> parameter specifies how many requests each IP address
+should be allowed to make per minute. (If it is zero, rate limiting should be
+disabled.) If a client makes more requests within a minute, the proxy should
+respond to those requests with HTTP error 429 (Too Many Requests) rather than
+forwarding the requests to the upstream servers.</p>
+<p>There are many algorithms for implementing rate limiting.
+<a href="https://konghq.com/blog/how-to-design-a-scalable-rate-limiting-algorithm/">This article</a>
+provides a great overview. We recommend implementing the <em>fixed window</em>
+algorithm, but if you are up for something just <em>slightly</em> more complex, you
+can give the <em>sliding window</em> algorithm a try.</p>
+<p>In the fixed window algorithm, the rate limiter tracks counters for each IP
+within a fixed time window (e.g. 12:00PM to 12:01PM). At the end of the window,
+the counters reset. This has the advantage of being extremely simple to
+implement. However, it is not the most accurate algorithm. To see why, imagine
+our rate limit is 100 requests/minute, and imagine a client sends 100 requests
+from 12:00:30 to 12:00:59, then sends another 100 requests from 12:01:00 to
+12:01:30. Such a client would get away with sending 200 requests, which is
+double the rate limit, even though those requests are legal under this rate
+limiting scheme. The sliding window algorithm preserves the fixed window
+algorithm’s simplicity while being more accurate. However, for this assignment,
+implementing fixed window rate limiting will suffice.</p>
+<p>You can run the <code>test_rate_limiting</code> test with this command:</p>
+<pre><code>cargo test rate_limiting
+</code></pre><p>At the end of this milestone, all tests should pass!</p>
+<pre><code>cargo test
+</code></pre><p><em>Tip:</em> You can create a rate limiting error response like so:</p>
+<pre><code>let response = response::make_http_error(http::StatusCode::TOO_MANY_REQUESTS);
+</code></pre><p>Then, you can use <code>response::write_to_stream</code> to send it to the client.</p>
+<h2 id="reflection">Reflection</h2>
+<p>When you finish, please write a brief reflection of your experience. You can
+save this in a file in any common format, but make sure to add it to your git
+repository so that it is included with your submission. (If you save
+<code>reflection.txt</code>, do <code>git add reflection.txt</code> before committing.)</p>
+<p>You can write anything you like, but here are some things we would love to hear
+about:</p>
+<ul>
+<li>What did you like about this assignment? What did you not like about it?</li>
+<li>Were there any parts you got stuck on?</li>
+<li>Were there any creative things you tried in order to improve performance?</li>
+<li>What did you learn?</li>
+</ul>
+<h2 id="extensions">Extensions</h2>
+<p>This assignment is quite open ended, and there are many more features you could
+implement. You’re welcome to take a look at HAProxy and Nginx to take
+inspiration from production load balancers. If you implement something new that
+is related to performance, feel free to talk to us about benchmarking, and we
+can suggest ways that you can benchmark and compare your implementation.</p>
+<p>Here some features we feel would be particularly worthwhile:</p>
+<h3 id="connection-pooling">Connection pooling</h3>
+<p>If you have the time, this might be one of the most interesting extra features
+to implement.</p>
+<p>When a client connects to balancebeam, balancebeam must first establish a
+connection to an upstream before relaying the request. Establishing a
+connection is an expensive process that can double the time required to service
+a request in the worst cases.</p>
+<p>A <em>connection pool</em> is a pool of open, ready-to-go upstream connections that a
+load balancer maintains in order to reduce request latency. (This is actually
+not a load balancing concept; for example, database clients almost always
+maintain a pool of connections to the database so that database queries can be
+executed with minimal latency.) When a request comes in, it is forwarded to an
+upstream over an idle connection in the pool. If there are no idle connections
+in the pool, the load balancer can fall back to opening a new connection, but
+this pooling reduces latency in the common case.</p>
+<h3 id="better-rate-limiting">Better rate limiting</h3>
+<p>As mentioned, fixed window rate limiting isn’t the best strategy. Sliding
+window rate limiting provides significant improvements, and isn’t too hard to
+implement.</p>
+<p>Also, if you are interested, <a href="https://blog.cloudflare.com/counting-things-a-lot-of-different-things/">this article from
+Cloudflare</a>
+provides an overview of rate limiting at scale and explains how counters are
+maintained over a network of countless load balancers. (Cloudflare itself is
+essentially one <em>massive,</em> distributed load balancer.)</p>
+<h3 id="other-load-balancing-algorithms">Other load balancing algorithms</h3>
+<p>The balancebeam starter code does <em>random</em> load balancing. This strategy is
+pretty effective and dead simple, but it degenerates under high load. Other
+strategies take into account how loaded each server is. There is a decent
+high-level summary of techniques
+<a href="https://kemptechnologies.com/load-balancer/load-balancing-algorithms-techniques/">here</a>.
+Some of them depend on knowing the CPU load of each server, which is not
+possible with our setup, but techniques depending on the number of open
+connections are possible.
+<a href="https://www.haproxy.com/blog/power-of-two-load-balancing/">This article</a> also
+does a great job of exploring a hybrid algorithm called Power of Two Choices,
+and talks about benchmarking different algorithms.</p>
+<h3 id="caching">Caching</h3>
+<p>A load balancer can also cache responses from application servers in order to
+reduce load on upstreams. Unlike the CS 110 proxy cache, this cache should be
+entirely in-memory in order to minimize latency. Since memory is a limited
+resource, you will want to implement policies for when data is evicted from the
+cache. You can depend on libraries if you like, such as
+<a href="https://docs.rs/lru/0.4.5/lru/">lru</a>.</p>
+<h3 id="web-application-firewall">Web Application Firewall</h3>
+<p>A WAF screens incoming requests, guessing whether a request seems to be
+malicious (e.g. an unusual request that seems intended to exploit a
+vulnerability on the application server, or an attempt at brute forcing
+credentials) and denying malicious traffic from reaching upstream servers. I
+didn’t find any WAF crates for Rust, but let us know if you would be interested
+in learning how to call into C++ code so that you can use the standard
+<a href="https://github.com/SpiderLabs/ModSecurity/">ModSecurity</a> library for
+filtering.</p>
+
+</div>
+
+    
+
+
+</body></html>

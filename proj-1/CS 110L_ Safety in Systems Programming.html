@@ -1,0 +1,852 @@
+
+<!-- saved from url=(0064)https://reberhardt.com/cs110l/spring-2020/assignments/project-1/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+        <script async="" src="./CS 110L_ Safety in Systems Programming_files/analytics.js"></script><script src="./CS 110L_ Safety in Systems Programming_files/BSCVfTNTG-yWNgHeuCpu_OptETQ.js"></script><link href="./CS 110L_ Safety in Systems Programming_files/css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/review.css">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/codemirror.css">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/style.css">
+        <title>CS 110L: Safety in Systems Programming</title>
+    </head>
+    <body>
+
+
+        <div class="page-header-container collapsed">
+            <div class="navbar">
+                <div class="navbar-contents">
+                    <div class="nav-home">
+                        <h3><a href="https://reberhardt.com/cs110l/spring-2020/">CS 110L</a></h3>
+                    </div>
+                    <ul>
+    <li><a href="https://reberhardt.com/cs110l/spring-2020/pages/schedule/">Schedule</a></li>
+    <li><a href="https://cs110l.slack.com/">Slack</a></li>
+    
+    
+    
+</ul>
+
+                </div>
+                <div class="old-class-warning">
+                    ⚠️ Heads up! You're looking at an old class website. <a href="https://cs110l.stanford.edu/">Click here for the latest version of this class.</a> ⚠️
+                </div>
+            </div>
+        </div>
+
+
+
+<div class="content">
+    <h1>Project 1: The DEET Debugger</h1>
+
+    <p>In this project, you’ll implement the DEET debugger (Dodgy Eliminator of Errors
+and Tragedies) to get the deets on those pesky bugs in your code.</p>
+<p><img src="./CS 110L_ Safety in Systems Programming_files/bugspray.jpg" alt="bug spray"></p>
+<p>This project will give you practice with multiprocessing in Rust, and will give
+you a better sense of how processes are managed by the operating system as well
+as how <code>ptrace</code> can be used to circumvent process boundaries. While DEET is
+simpler and less powerful than GDB, you’ll experience the mechanics that all
+debuggers are based on. We welcome you to add your own features to build the
+debugger that <em>you</em> would want to use!</p>
+<p>This is a big and complex project that will synthesize everything you’ve learned
+so far. Please ask questions on slack if anything is unclear or if you’re feeling
+stuck/confused!</p>
+<h2 id="logistics">Logistics</h2>
+<p>This project is due on <strong>Tuesday, May 19 at 11:59PM pacific time</strong>.</p>
+<p>You may work with a partner if you would like. You can find partners in
+the <a href="https://cs110l.slack.com/archives/C0119PYDPED/p1588527455002400">#project-1 partner thread</a> on Slack.</p>
+<p>If you would be interested in working on a different project, let us know! This
+is a small class and we would love to support your individual interests.</p>
+<p>Finally, please let us know if you run into any problems. It’s still very easy
+to get tripped up by Rust syntax and mechanics, and there are some nontrivial
+concepts at play here as well. We are here to help!</p>
+<h3 id="working-with-a-partner">Working with a partner</h3>
+<p>If you work with a partner, only one person should submit. You should add a
+comment to the top of <code>main.rs</code> including both partners’ names and sunet IDs
+(Stanford usernames). Message us on Slack and we can add your partner to your
+Github repository (or vice versa).</p>
+<p>We <em>strongly, strongly</em> recommend that you do <em>not</em> simply split up the
+milestones below, but rather work together through all the work. This project
+is sufficiently complex that both of you need to understand all the parts
+involved, and we think you will benefit the most if you work closely with your
+partner to figure out how to solve problems and structure your code instead of
+working separately. If at all possible, try working together synchronously over
+an audio or video call.</p>
+<p>Git is the industry-standard tool for collaborating on a codebase. Using it to
+collaborate is more difficult than using it as a sole developer (you’ll need to
+learn how to avoid and resolve merge conflicts when two people edit the same
+code at the same time). However, if you take time to learn how to use git
+properly, that experience will benefit you for years to come! Again, message us
+and we can add your partner to your Github repository (or vice versa).</p>
+<p>However, git is mostly oriented for teams where people are working on different
+parts of a codebase. Using it to collaborate on the same parts of the code at
+the same time can be difficult, because doing so creates merge conflicts (you
+edit <code>Debugger</code>, your partner edits <code>Debugger</code>, and then you try to sync your
+changes and <code>git</code> doesn’t know what to do with the two sets of changes). From
+my experience, the best way to collaborate synchronously is to use an editor
+plugin that implements Google Docs-style sharing. Here are some that I found
+from a quick Google search:</p>
+<ul>
+<li>VSCode: <a href="https://visualstudio.microsoft.com/services/live-share/">Live Share</a>
+looks really, really awesome.</li>
+<li><a href="https://floobits.com/">Floobits</a> has plugins for IntelliJ, Sublime, Atom,
+and others. You can get free private workspaces by using an <a href="https://floobits.com/edu">education
+account</a>.</li>
+<li><a href="https://www.codetogether.com/">CodeTogether</a> is one I haven’t heard of
+before, but they’re offering all features for free during the COVID-19
+pandemic. May be worth checking out if you don’t like the other options.</li>
+<li><a href="https://teamhub.dev/">TeamHub</a> looks similar, but it looks like it’s in
+beta and you’d need to request an invite.</li>
+</ul>
+<h4 id="tips-for-working-with-git">Tips for working with git</h4>
+<ul>
+<li>A merge conflict happens when two people change the same part of a file (e.g.
+the same function). It won’t happen if you make a change at the top of file A
+and your partner makes a change at the bottom of file A. If possible,
+coordinate changes with your partner so that you aren’t touching the same
+code at the same time.
+<ul>
+<li>That said, if a merge conflict happens, it’s not the end of the world.
+Merge conflicts are common, and there are great tools built for resolving
+them.</li>
+</ul>
+</li>
+<li>Make frequent, small commits. A gigantic commit is very likely to create
+merge conflicts! Also, if you break something, it’s easier to go back and fix
+it if you’ve been making incremental commits along the way. You can always
+merge small commits into bigger ones, but you can’t easily split large
+commits into smaller ones.</li>
+<li>Write good commit messages. Not only will this help your partner understand
+the changes you made, but it will also help in resolving merge conflicts,
+since you can more quickly understand what changes are conflicting.
+<a href="https://chris.beams.io/posts/git-commit/">Here’s</a> an article about commit
+message style.</li>
+<li>Push and pull often. It’s always a nightmare when two people independently
+make a large number of changes, then attempt to push and are forced to
+resolve a stack of 15 commits.</li>
+<li>Say you have made some commits, and your partner just pushed their commits to
+the server. You won’t be able to push your commits until you pull their
+commits and reconcile them with your changes. If you run <code>git pull</code>, <code>git</code>
+will download their commits and attempt to merge them with yours. If
+successful, it will commit a new “merge commit” that merges the two sets of
+changes. However, if you do this often, your git history will end up
+cluttered with merge commits. I prefer to run <code>git pull --rebase</code>, which
+downloads your partner’s changes, then re-commits your changes <em>on top of
+them</em>. It avoids creating merge commits in the history.</li>
+<li>Branches are a useful feature of git that allow contributors to establish
+separate “threads of development” in a codebase. However, since this project
+is small and since the milestones should be completed in order, we recommend
+against using branches here. If you’re curious (you will inevitably encounter
+branches in the future), <a href="https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell">this
+article</a>
+gives a good summary, and <a href="https://learngitbranching.js.org/?locale=en_US">this
+website</a> has a great
+interactive visualization of how branches work.</li>
+</ul>
+<h2 id="getting-set-up">Getting set up</h2>
+<p>The starter code is available on GitHub
+<a href="https://github.com/reberhardt7/cs110l-spr-2020-starter-code">here</a>.</p>
+<p>We recommend using a Linux system for development on this project.
+Unfortunately, the interface of <code>ptrace</code> differs between Linux and BSD (e.g.
+Mac) systems, and is not available on Windows. Additionally, different systems
+store debugging symbols in different ways. While it is certainly possible to
+extend your debugger to work on multiple platforms, we will only target Linux
+here for simplicity.</p>
+<p>If you’re on Linux, you can stop reading and just use <code>cargo</code> as you have in
+previous exercises. If you’re on Mac or Windows, you have two options:</p>
+<ul>
+<li>Use myth, as you did in last week’s weekly exercises.</li>
+<li>Use Docker to run your debugger locally. Docker is a popular tool that
+creates consistent environments to develop/test/deploy software in. (C
+Playground runs each program in a Docker container!) It may take some more
+work to get running, but will probably be more smooth in terms of running
+your code.</li>
+</ul>
+<p><strong>Edit:</strong> It seems that one of the libraries we’re using depends on a newer
+version of Rust than is installed on the myths. I’ve filed an IT support
+ticket, and hopefully Rust will be upgraded within a few days. In the meantime,
+however, if you would like to use <code>myth</code>, you can install a newer version of
+Rust like so:</p>
+<pre><code>curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o rustup.sh
+chmod +x rustup.sh
+./rustup.sh -y
+echo "source ~/.cargo/env" &gt;&gt; ~/.bash_profile
+source ~/.cargo/env
+</code></pre><p>If you run <code>cargo --version</code>, you should see
+<code>cargo 1.43.0 (3532cf738 2020-03-17)</code> or newer.</p>
+<h3 id="installing-docker">Installing Docker</h3>
+<p>On Mac, you can download and install Docker
+<a href="https://download.docker.com/mac/stable/Docker.dmg">here</a>. Easy peasy.</p>
+<p>On Windows, there are a few ways to install:</p>
+<ul>
+<li>The primary Windows installer is
+<a href="https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe">here</a>.
+However, I’ve read reports that this will enable HyperV, which will prevent
+you from using VirtualBox. If that’s something you use, then you should not
+use this option.</li>
+<li><a href="https://docs.docker.com/toolbox/toolbox_install_windows/">Docker Toolbox</a> is
+an older version of Docker that runs on VirtualBox (from my understanding).
+If you use VirtualBox, this may be worth a shot.</li>
+<li>If you use WSL, there is an experimental version of Docker that runs in WSL
+and will probably be much smoother once stable. You can read about it
+<a href="https://code.visualstudio.com/blogs/2020/03/02/docker-in-wsl2">here</a>.</li>
+</ul>
+<p>I’m sorry this is so complicated :( Docker is such a widely-used tool in
+industry, and it’s quite sad to see such poor Windows support. If you’re short
+on time, just run on myth, but if you give this a shot, let me know how it
+goes.</p>
+<h3 id="building-the-docker-image">Building the Docker image</h3>
+<p><code>cd</code> into the <code>deet/</code> directory, and then run <code>docker build</code>:</p>
+<pre><code>docker build -t deet .
+</code></pre><p>This will build an <code>deet</code> <em>image</em> containing dependencies needed to run your
+program. This might take a while. (In our case, the dependencies are just a
+barebones version of Ubuntu, <code>cargo</code>, and <code>make</code>.)</p>
+<p>Once you build this image, you won’t need to do it again!</p>
+<h3 id="running-cargo">Running cargo</h3>
+<p>Once the image is built, you can run your code. Here’s a pretty long
+incantation that runs <code>cargo build</code> in your Docker image:</p>
+<pre><code>docker run --rm -it \
+    -v "${PWD}":/deet -v "${PWD}/.cargo":/.cargo \
+    -u $(id -u ${USER}):$(id -g ${USER}) \
+    deet \
+    cargo build
+</code></pre><p>Since this is rather long and complex, we included a mini script that does the
+<code>docker run</code> part for you. You can run it like this:</p>
+<pre><code>./container cargo build
+./container cargo run
+</code></pre><p>You can edit code locally on your machine using whatever editor you like and
+run the <code>./container</code> command to run your code. No need to upload or sync your
+files anywhere.</p>
+<p>You can also run other things within the container. For example, you can run
+make and gdb:</p>
+<pre><code>./container make
+./container gdb samples/function_calls
+</code></pre><h2 id="milestone-0-read-the-starter-code">Milestone 0: Read the starter code</h2>
+<p>This is the first large project in CS 110L, and it may be one of your first
+times working with a more substantial codebase.</p>
+<p>There are a few files you should be aware of:</p>
+<ul>
+<li><code>main.rs</code> is a short file that serves as the entrypoint for the program. You
+won’t need to make any changes here.</li>
+<li><code>debugger.rs</code> contains the code that implements the command-line interface
+for DEET. You’ll be making a lot of changes here.</li>
+<li><code>debugger_command.rs</code> contains some code for parsing commands that are typed
+into DEET. Any time you add a new command, you’ll need to add code here.</li>
+<li><code>inferior.rs</code> contains code to manage child processes being run by the
+debugger. As you add features that involve controlling the program being
+debugged, you will need to add code here.</li>
+<li><code>dwarf_data.rs</code> contains a series of helper functions for extracting
+debugging symbols (e.g. line numbers, variable names, function names) from
+the executable being debugged. You won’t need to make any changes here, but
+you will need to use these functions in Milestone 3.</li>
+<li><code>gimli_wrapper.rs</code> contains functions that are used to read debugging symbols
+from a binary file. It is messy code patched together from several
+<a href="https://github.com/gimli-rs/gimli">Gimli</a> examples; please don’t read it :)
+(unless you plan to do an extension and need to collect more information from
+the dwarf file)</li>
+</ul>
+<p>In addition, we have provided a series of sample programs that you can use to
+test your debugger. These programs are written in C and are in the <code>samples/</code>
+directory, although we’d like to note that you could use DEET to debug Rust
+programs as well!</p>
+<p>You should run <code>make</code> (or <code>./container make</code> if you’re using Docker) to compile
+the sample programs before proceeding.</p>
+<h2 id="milestone-1-run-the-inferior">Milestone 1: Run the inferior</h2>
+<p>In this milestone, you will modify the debugger to start an <em>inferior</em>. An
+inferior is a process that is being traced by the debugger. (Debuggers are
+apparently just a tad bit narcissistic!)</p>
+<p>Currently, code in <code>debugger_command</code> and <code>debugger</code> extracts arguments from
+the <code>r</code> command and passes them to <code>Inferior::new</code>:</p>
+<pre><code>🍌 ./container cargo run samples/sleepy_print
+   Compiling deet v0.1.0 (/deet)
+    Finished dev [unoptimized + debuginfo] target(s) in 13.41s
+     Running `target/debug/deet samples/sleepy_print`
+(deet) r 3
+Inferior::new not implemented! target=samples/sleepy_print, args=["3"]
+Error starting subprocess
+(deet)
+</code></pre><p>Your first job is to implement <code>Inferior::new</code> to spawn a child process running
+our target program. This child process should have debugging enabled; similar
+to what you did in the trace portion of the CS 110 assignment 3, you’ll need to
+call <code>ptrace</code> with <code>PTRACE_TRACEME</code> after the child process <code>fork()</code>s but
+before <code>exec</code> is called.</p>
+<p>In <code>Inferior::new</code>, you should do the following things:</p>
+<ul>
+<li>Create a <a href="https://doc.rust-lang.org/std/process/struct.Command.html">Command</a>
+to <code>spawn</code> the target program with the provided arguments.</li>
+<li>Before calling <code>spawn()</code> on the command, use
+<a href="https://doc.rust-lang.org/std/os/unix/process/trait.CommandExt.html#tymethod.pre_exec"><code>pre_exec</code></a>
+to call <code>child_traceme</code> in the child process. See Tuesday’s lecture slides
+for example usage of <code>pre_exec</code>. Note that you must
+<code>use std::os::unix::process::CommandExt;</code> in order to use <code>pre_exec</code>.</li>
+<li>When a process that has <code>PTRACE_TRACEME</code> enabled calls <code>exec</code>, the operating
+system will load the specified program into the process, and then (before the
+new program starts running) it will pause the process using <code>SIGTRAP</code>. You
+should call
+<a href="https://docs.rs/nix/0.17.0/nix/sys/wait/fn.waitpid.html"><code>waitpid</code></a> on the
+child process to verify that it stops with signal <code>SIGTRAP</code>, in order to
+verify that everything is in working order (if this check fails, simply
+return <code>None</code>). You are welcome to call <code>waitpid</code> directly, or to use the
+<code>Inferior::wait</code> method that we have provided.</li>
+<li>Once you have verified that the child process seems to be in working order,
+you can construct an <code>Inferior</code> and return it!</li>
+</ul>
+<p>As mentioned, <code>PTRACE_TRACEME</code> causes programs to start in a stopped state.
+Once you are constructing <code>Inferior</code> objects, you’ll need a way to start
+program execution.</p>
+<p>We would recommend implementing a “continue” method on <code>Inferior</code> (you can’t
+call it <code>continue</code>, since that’s a reserved keyword) that wakes up the inferior
+and waits until it stops or terminates. To wake up the inferior, you can use
+<a href="https://docs.rs/nix/0.17.0/nix/sys/ptrace/fn.cont.html"><code>ptrace::cont</code></a> (pass
+<code>None</code> for <code>sig</code>), and to wait, you can use <code>self.wait(None)</code>. Our continue
+method returns <code>Result&lt;Status, nix::Error&gt;</code> in order to pass on the resulting
+program status and any errors to the caller. (We use <code>?</code> syntax to simplify
+error handling.)</p>
+<p>You’ll need to update <code>Debugger::run</code> to call this continue method after it
+constructs an <code>Inferior</code>. You should use the status returned from your continue
+method to print a message about the status of the inferior.</p>
+<p><strong>Expected outcomes:</strong></p>
+<ul>
+<li>You can start inferiors and pass arguments using the <code>run</code> command</li>
+<li>When an inferior stops or terminates, the debugger should print a message
+(e.g. <em>Child exited (status 0)</em>)</li>
+<li>You can run a program multiple times within a debugging session</li>
+</ul>
+<p>Example output:</p>
+<pre><code>🍌 ./container cargo run samples/sleepy_print
+    Finished dev [unoptimized + debuginfo] target(s) in 1.94s
+     Running `target/debug/deet samples/sleepy_print`
+(deet) r 3
+0
+1
+2
+Child exited (status 0)
+(deet) r 3
+0
+1
+2
+Child exited (status 0)
+(deet)
+</code></pre><h2 id="milestone-2-stopping-resuming-and-restarting-the-inferior">Milestone 2: Stopping, resuming, and restarting the inferior</h2>
+<p>Sometimes, when a process deadlocks, it is helpful to temporarily stop it, poke
+around (e.g. print a backtrace to see where it is deadlocked), then resume it.
+In this milestone, we will add the ability to pause and resume an inferior.</p>
+<p>As it happens, our debugger already has the ability to pause an inferior.
+Normally, <code>SIGINT</code> will terminate a process, but if a process is being traced
+under <code>ptrace</code>, <code>SIGINT</code> will cause it to temporarily stop instead, as if it
+were sent <code>SIGSTOP</code>. (The same is true for all signals that typically terminate
+a process. This is useful for debugging: if a program segfaults but is being
+traced under ptrace, the program will stop instead of terminating so that you
+can get a backtrace and inspect its memory.) You can try this out: run
+<code>samples/sleepy_print</code> under your debugger with the argument <code>5</code>. Press
+<code>ctrl+c</code>, and the program will stop.</p>
+<p>Now, we need a way to resume a stopped process. Let’s add a <code>continue</code> command,
+similar to the one GDB has.</p>
+<p>To add a command, you’ll need to add an enum variant to <code>DebuggerCommand</code> in
+<code>debugger_command.rs</code>, and you’ll need to update <code>DebuggerCommand::from_tokens</code>
+to return your new variant when <code>c</code>, <code>cont</code>, or <code>continue</code> are typed in DEET.
+Then, update <code>Debugger::run</code> to continue the inferior when the <code>continue</code>
+command is typed. (You can use your continue method from the previous
+milestone!) Your <code>continue</code> command should print the status of the inferior
+when it stops or terminates next, similar to the <code>run</code> command.</p>
+<pre><code>🍌 ./container cargo run samples/sleepy_print
+    Finished dev [unoptimized + debuginfo] target(s) in 2.56s
+     Running `target/debug/deet samples/sleepy_print`
+(deet) run 5
+0
+1
+^CChild stopped (signal SIGINT)
+(deet) cont
+2
+3
+^CChild stopped (signal SIGINT)
+(deet) cont
+4
+Child exited (status 0)
+(deet)
+</code></pre><p>Note that there are some edge cases you should handle: What happens if you type
+<code>continue</code> before you type <code>run</code>? Your implementation should check whether an
+inferior is running, and print an error message if there is not one running.</p>
+<p>Also, what happens when you pause an inferior using <code>ctrl+c</code>, then type <code>run</code>?
+You should take care to kill any existing inferiors before starting new ones,
+so that there is only one inferior at a time. You can use
+<a href="https://doc.rust-lang.org/std/process/struct.Child.html#method.kill"><code>Child::kill</code></a>
+to kill a process, and then you’ll need to reap the killed process. (We added
+an <code>Inferior::kill</code> method and called this from <code>Debugger::run</code>, although you
+are not required to do so.)</p>
+<p>Similarly, what happens if you exit DEET while a process is paused? You should
+update the handling of <code>DebuggerCommand::Quit</code> to terminate the inferior if one
+is running.</p>
+<pre><code>(deet) run 5
+0
+1
+^CChild stopped (signal SIGINT)
+(deet) quit
+Killing running inferior (pid 216)
+</code></pre><p>If you want to test your management of child processes, use DEET to start a
+<code>sleepy_print</code> inferior, pause it, start a new inferior, and pause that second
+inferior. In a separate terminal, run <code>ps aux | grep sleepy_print</code> (or
+<code>docker exec deet ps aux | grep sleepy_print</code> if you are using docker). There
+should only be one <code>samples/sleepy_print</code> process. If you see multiple, or you
+see a <code>&lt;defunct&gt;</code> entry, then you are not killing or reaping child processes
+properly.</p>
+<pre><code>🍌 ./container cargo run samples/sleepy_print
+   Compiling deet v0.1.0 (/deet)
+    Finished dev [unoptimized + debuginfo] target(s) in 29.80s
+     Running `target/debug/deet samples/sleepy_print`
+(deet) run 5
+0
+1
+^CChild stopped (signal SIGINT)
+(deet) run 5
+Killing running inferior (pid 204)
+0
+1
+^CChild stopped (signal SIGINT)
+(deet)
+</code></pre><pre><code>🍌 docker exec deet ps aux | grep sleepy_print
+501          1  0.6  0.2  16292  4448 pts/0    Ss+  10:29   0:00 target/debug/deet samples/sleepy_print
+501        210  0.0  0.0   4504   704 pts/0    t+   10:29   0:00 samples/sleepy_print 5
+</code></pre><p><strong>Expected outcomes:</strong></p>
+<ul>
+<li>You can pause an inferior using <code>ctrl+c</code>.</li>
+<li>You can resume an inferior using <code>continue</code>.</li>
+<li>Inferiors can be paused/resumed several times.</li>
+<li>The status of the inferior is printed whenever it stops/terminates.</li>
+<li>At most one inferior process exists at any time. No zombie processes!</li>
+<li>Any running inferior is terminated when the debugger quits.</li>
+</ul>
+<h2 id="milestone-3-printing-a-backtrace">Milestone 3: Printing a backtrace</h2>
+<p>In this milestone, you’ll implement code to print a stack trace for a paused
+program.</p>
+<p>Define a new <code>DebuggerCommand</code> that is returned when the user types <code>bt</code>,
+<code>back</code>, or <code>backtrace</code>. For starters, define a method <code>print_backtrace(&amp;self) -&gt; Result&lt;(), nix::Error&gt;</code> in <code>Inferior</code> that prints “hello world,” and call
+this method when the user types a backtrace command. Test this out to ensure
+that your debugger is able to read and process the <code>backtrace</code> command.</p>
+<p>Once you have done this, let’s move onto implementing <code>print_backtrace</code>.</p>
+<p>As a first step, let’s print out the value of the <code>%rip</code> register. This value
+is the address of the instruction in the text segment that we are executing.
+You can use
+<a href="https://docs.rs/nix/0.17.0/nix/sys/ptrace/fn.getregs.html"><code>ptrace::getregs</code></a>
+to get the inferior’s register values. Use <code>println!("{:#x}", ...)</code> to print
+the register value in hexadecimal. Note that you may see a different value than
+us depending on the machine you are compiling on.</p>
+<pre><code>🍌 ./container cargo run samples/segfault
+    Finished dev [unoptimized + debuginfo] target(s) in 2.61s
+     Running `target/debug/deet samples/segfault`
+(deet) run
+Calling func2
+About to segfault... a=2
+Child stopped (signal SIGSEGV)
+(deet) back
+%rip register: 0x400560
+(deet)
+</code></pre><p>Great, we’re printing something! But this isn’t very meaningful. In order to be
+useful, a backtrace should show function names and line numbers so that a
+programmer can see which parts of their program is running. However, a running
+executable is comprised only of assembly instructions and has no awareness of
+function names or line numbers. In order to print such information, we need to
+read extra <em>debugging symbols</em> that are stored within an executable compiled
+for debugging. This debugging information stores mappings between addresses and
+line numbers, functions, variables, and more.  With this information, we can
+find where variables are stored in memory or figure out what line is being
+executed based on the value of the processor’s instruction pointer.</p>
+<p>On many platforms, debugging symbols are stored in a format called DWARF and
+embedded inside the executable file. In developing this assignment, we
+discovered that DWARF is extremely complicated, and there are not yet any good
+high-level DWARF parsers in Rust. In order to avoid subjecting you to the same
+pain we went through, we have provided you with some functions in
+<code>dwarf_data.rs</code> that you can use in your debugger implementation.</p>
+<p>To use these functions, you should first add these two lines to <code>main.rs</code>:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">mod</span> <span style="color:#0e84b5;font-weight:bold">dwarf_data</span>;<span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">mod</span> <span style="color:#0e84b5;font-weight:bold">gimli_wrapper</span>;<span style="color:#bbb">
+</span></code></pre></div><p>Then, in <code>debugger.rs</code>,
+<code>use crate::dwarf_data::{DwarfData, Error as DwarfError}</code>, and at the beginning
+of <code>Debugger::new</code>, load the target executable file:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>debug_data<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">match</span><span style="color:#bbb"> </span>DwarfData::from_file(target)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020">Ok</span>(val)<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>val,<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020">Err</span>(DwarfError::ErrorOpeningFile)<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>println<span style="color:#666">!</span>(<span style="color:#4070a0">"Could not open file {}"</span>,<span style="color:#bbb"> </span>target);<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>std::process::exit(<span style="color:#40a070">1</span>);<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020">Err</span>(DwarfError::DwarfFormatError(err))<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>println<span style="color:#666">!</span>(<span style="color:#4070a0">"Could not debugging symbols from {}: {:?}"</span>,<span style="color:#bbb"> </span>target,<span style="color:#bbb"> </span>err);<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>std::process::exit(<span style="color:#40a070">1</span>);<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>};<span style="color:#bbb">
+</span></code></pre></div><p>You should store <code>debug_data</code> inside the <code>Debugger</code> struct. Then, in
+<code>Debugger::run</code>, pass <code>debug_data</code> to your <code>print_backtrace</code> method.</p>
+<p>Let’s update <code>print_backtrace</code> to be more helpful. Armed with your <code>%rip</code>
+value, use <code>DwarfData::get_line_from_addr</code> to get the file name and line number
+corresponding to the current instruction, and use
+<code>DwarfData::get_function_from_addr</code> to get the function name. Print out this
+information, and you will have the start of something useful:</p>
+<pre><code>👾 ./container cargo run samples/segfault
+    Finished dev [unoptimized + debuginfo] target(s) in 2.43s
+     Running `target/debug/deet samples/segfault`
+(deet) r
+Calling func2
+About to segfault... a=2
+Child stopped (signal SIGSEGV)
+(deet) back
+func2 (/deet/samples/segfault.c:5)
+(deet)
+</code></pre><p>Amazing!</p>
+<p>To get the rest of the stack frames in the backtrace, we need to understand a
+little bit about how the stack is laid out.</p>
+<p><a href="https://www.cs.rutgers.edu/~pxk/419/notes/frames.html">This article</a> contains
+some good explanation of how stack frames work:</p>
+<p><img src="./CS 110L_ Safety in Systems Programming_files/frames-4.png" alt="Stack frame illustration"></p>
+<p>A stack frame is bounded by two registers: the value in <code>%rbp</code> is the address
+of the top of the current stack frame, and the value in <code>%rsp</code> is the address
+of the bottom of the current stack frame (<code>%ebp</code>
+and <code>%esp</code> refers to the lower 32 bits of the registers but you’ll be dealing with
+<code>%rbp</code> and <code>%rsp</code> respectively instead).</p>
+<p>If we want to get to the previous stack frame, we can read the memory pointed
+to by <code>%rbp</code>, and that will tell us what <code>%rbp</code> was for the previous stack
+frame (i.e. the value we get is the address of the top of the previous stack
+frame). We could read that address to get the top of the stack frame before
+that one, and so on.</p>
+<p>You may be thinking, <em>okay, so we can get stack frames, but how does that help
+us identify which function was running?</em> Notice that the return address is
+stored 8 bytes above the saved <code>%rbp</code> value. This return address is effectively
+<code>%rip</code> (the instruction pointer) for the previous stack frame.</p>
+<p>As such, we can implement a backtrace like this:</p>
+<pre><code>instruction_ptr = %rip
+base_ptr = %rbp
+while true:
+    print function/line number for instruction_ptr
+    if function == "main":
+        break
+    instruction_ptr = read memory at base_ptr + 8
+    base_ptr = read memory at base_ptr
+}
+</code></pre><p>To read memory, you can use <code>ptrace::read</code>:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust">rbp<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>ptrace::read(self.pid(),<span style="color:#bbb"> </span>rbp<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">as</span><span style="color:#bbb"> </span>ptrace::AddressType)<span style="color:#666">?</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">as</span><span style="color:#bbb"> </span><span style="color:#902000">usize</span>;<span style="color:#bbb">
+</span></code></pre></div><p>When this is done, you should be able to print a full backtrace:</p>
+<pre><code>👾 ./container cargo run samples/segfault
+    Finished dev [unoptimized + debuginfo] target(s) in 2.43s
+     Running `target/debug/deet samples/segfault`
+(deet) r
+Calling func2
+About to segfault... a=2
+Child stopped (signal SIGSEGV)
+Stopped at /deet/samples/segfault.c:5
+(deet) back
+func2 (/deet/samples/segfault.c:5)
+func1 (/deet/samples/segfault.c:12)
+main (/deet/samples/segfault.c:15)
+(deet)
+</code></pre><h2 id="milestone-4-print-stopped-location">Milestone 4: Print stopped location</h2>
+<p>When an inferior stops, GDB prints the file/line number that it stopped at.
+This is extremely helpful when dealing with breakpoints and step debugging,
+which we will tackle in the next few milestones.</p>
+<p>You may have noticed that <code>Status::Stopped</code> includes a <code>usize</code> containing the
+value of <code>%rip</code> for the stopped process. Modify your <code>Debugger</code> implementation
+such that when the inferior stops, if line number information is available from
+<code>DwarfData::get_line_from_addr</code>, DEET prints the line number where the program
+stopped. If you’re up for it, you can print the function name as well!</p>
+<pre><code>🍌 ./container cargo run samples/segfault
+    Finished dev [unoptimized + debuginfo] target(s) in 2.07s
+     Running `target/debug/deet samples/segfault`
+(deet) r
+Calling func2
+About to segfault... a=2
+Child stopped (signal SIGSEGV)
+Stopped at /deet/samples/segfault.c:5
+(deet)
+</code></pre><h2 id="milestone-5-setting-breakpoints">Milestone 5: Setting breakpoints</h2>
+<p>In this milestone, we’ll allow a user to set a breakpoint at a specific memory
+address using a command like <code>break *0x123456</code> (or <code>b *0x123456</code> for short).</p>
+<p>First, update <code>DebuggerCommand</code> and <code>Debugger</code> to parse a <code>break</code> command. We
+recommend storing a simple <code>String</code> target in the <code>DebuggerCommand</code> enum
+variant, and then do more sophisticated parsing (e.g. ensure the target string
+starts with <code>*</code>, and extract the address as a <code>usize</code> from the string) in
+<code>Debugger</code>. This is because in Milestone 6, you will be updating this code to
+take different kinds of breakpoints, e.g. breakpoints on function names or line
+numbers.</p>
+<p>You may use this code to parse a <code>usize</code> from a hexadecimal string:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">parse_address</span>(addr: <span style="color:#007020">&amp;</span><span style="color:#902000">str</span>)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">Option</span><span style="color:#666">&lt;</span><span style="color:#902000">usize</span><span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>addr_without_0x<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">if</span><span style="color:#bbb"> </span>addr.to_lowercase().starts_with(<span style="color:#4070a0">"0x"</span>)<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#666">&amp;</span>addr[<span style="color:#40a070">2</span>..]<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">else</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#666">&amp;</span>addr<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>};<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#902000">usize</span>::from_str_radix(addr_without_0x,<span style="color:#bbb"> </span><span style="color:#40a070">16</span>).ok()<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>Note that users should be able to set breakpoints before any inferior is
+running. (If you make them run the inferior first, it will likely exit before
+they are able to set breakpoints.) As such, you should store set breakpoints in
+a <code>Vec&lt;usize&gt;</code> in the <code>Debugger</code> struct. When a user types <code>break *0x123456</code>,
+you should add <code>0x123456</code> to the list of set breakpoints.</p>
+<pre><code>(deet) b *0x123456
+Set breakpoint 0 at 0x123456
+</code></pre><p>Our implementation prints out a confirmation message along with a breakpoint
+number, but this is not required.</p>
+<p>When creating an <code>Inferior</code>, you should pass <code>Inferior::new</code> a list of
+breakpoints. In <code>Inferior::new</code>, after you wait for <code>SIGTRAP</code> (indicating that
+the inferior has fully loaded) but before returning, you should install these
+breakpoints in the child process.</p>
+<p>How does one set a breakpoint on a process? The answer is more hacky than you
+might expect, yet this is exactly how GDB works. To set a breakpoint on the
+instruction at <code>0x123456</code>, simply use ptrace to write to the child process’s
+memory, replacing the byte at <code>0x123456</code> with the value <code>0xcc</code>. This
+corresponds to the <code>INT</code> (“interrupt”) instruction; any process that runs this
+instruction is temporarily halted.</p>
+<p>This is simple in concept but slightly challenging in practice because <code>ptrace</code>
+does not support writing single bytes to a child’s memory. In order to write a
+byte, you must read a full 8 bytes into a <code>long</code>, use bitwise arithmetic to
+substitute the desired byte into that <code>long</code>, and then write the full <code>long</code>
+back to the child’s memory. Additionally, despite the <code>nix</code> crate’s <code>ptrace</code>
+having a much nicer interface than the <code>ptrace</code> syscall, it’s still a bit funky
+to use (it requires some bizarre type conversions). As such, we would rather
+you not spend time on trying to figure out how to do this. You may use the
+following code:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">use</span><span style="color:#bbb"> </span>std::mem::size_of;<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">align_addr_to_word</span>(addr: <span style="color:#902000">usize</span>)<span style="color:#bbb"> </span>-&gt; <span style="color:#902000">usize</span> {<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>addr<span style="color:#bbb"> </span><span style="color:#666">&amp;</span><span style="color:#bbb"> </span>(<span style="color:#666">-</span>(size_of::<span style="color:#666">&lt;</span><span style="color:#902000">usize</span><span style="color:#666">&gt;</span>()<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">as</span><span style="color:#bbb"> </span><span style="color:#902000">isize</span>)<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">as</span><span style="color:#bbb"> </span><span style="color:#902000">usize</span>)<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">impl</span><span style="color:#bbb"> </span>Inferior<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">write_byte</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self,<span style="color:#bbb"> </span>addr: <span style="color:#902000">usize</span>,<span style="color:#bbb"> </span>val: <span style="color:#902000">u8</span>)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">Result</span><span style="color:#666">&lt;</span><span style="color:#902000">u8</span>,<span style="color:#bbb"> </span>nix::Error<span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>aligned_addr<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>align_addr_to_word(addr);<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>byte_offset<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>addr<span style="color:#bbb"> </span><span style="color:#666">-</span><span style="color:#bbb"> </span>aligned_addr;<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>word<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>ptrace::read(self.pid(),<span style="color:#bbb"> </span>aligned_addr<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">as</span><span style="color:#bbb"> </span>ptrace::AddressType)<span style="color:#666">?</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">as</span><span style="color:#bbb"> </span><span style="color:#902000">u64</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>orig_byte<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>(word<span style="color:#bbb"> </span><span style="color:#666">&gt;&gt;</span><span style="color:#bbb"> </span><span style="color:#40a070">8</span><span style="color:#bbb"> </span><span style="color:#666">*</span><span style="color:#bbb"> </span>byte_offset)<span style="color:#bbb"> </span><span style="color:#666">&amp;</span><span style="color:#bbb"> </span><span style="color:#40a070">0xff</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>masked_word<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>word<span style="color:#bbb"> </span><span style="color:#666">&amp;</span><span style="color:#bbb"> </span><span style="color:#666">!</span>(<span style="color:#40a070">0xff</span><span style="color:#bbb"> </span><span style="color:#666">&lt;&lt;</span><span style="color:#bbb"> </span><span style="color:#40a070">8</span><span style="color:#bbb"> </span><span style="color:#666">*</span><span style="color:#bbb"> </span>byte_offset);<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#007020;font-weight:bold">let</span><span style="color:#bbb"> </span>updated_word<span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>masked_word<span style="color:#bbb"> </span><span style="color:#666">|</span><span style="color:#bbb"> </span>((val<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">as</span><span style="color:#bbb"> </span><span style="color:#902000">u64</span>)<span style="color:#bbb"> </span><span style="color:#666">&lt;&lt;</span><span style="color:#bbb"> </span><span style="color:#40a070">8</span><span style="color:#bbb"> </span><span style="color:#666">*</span><span style="color:#bbb"> </span>byte_offset);<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>ptrace::write(<span style="color:#bbb">
+</span><span style="color:#bbb">            </span>self.pid(),<span style="color:#bbb">
+</span><span style="color:#bbb">            </span>aligned_addr<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">as</span><span style="color:#bbb"> </span>ptrace::AddressType,<span style="color:#bbb">
+</span><span style="color:#bbb">            </span>updated_word<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">as</span><span style="color:#bbb"> </span><span style="color:#666">*</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>std::ffi::c_void,<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>)<span style="color:#666">?</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#007020">Ok</span>(orig_byte<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">as</span><span style="color:#bbb"> </span><span style="color:#902000">u8</span>)<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>You can test this by modifying <code>Debugger::new</code> to call <code>debug_data.print()</code>.
+This will print out a list of locations in the loaded binary. You can set a
+breakpoint on one of these locations, and the program should stop there with a
+<code>SIGTRAP</code>. For example, below, I set a breakpoint at the beginning of <code>func2</code>
+(where the segfault is triggered), which happens to be at <code>0x400537</code> for my
+particular compiler. When I run the program, it does not segfault (since the
+breakpoint was before the line that causes the segfault), and DEET prints that
+it stopped on line 3.</p>
+<pre><code>👾 ./container cargo run samples/segfault
+   Compiling deet v0.1.0 (/deet)
+    Finished dev [unoptimized + debuginfo] target(s) in 30.75s
+     Running `target/debug/deet samples/segfault`
+------
+samples/segfault.c
+------
+Global variables:
+Functions:
+  * main (declared on line 14, located at 0x4005b4, 21 bytes long)
+  * func1 (declared on line 9, located at 0x400571, 67 bytes long)
+    * Variable: a (int, located at FramePointerOffset(-20), declared at line 9)
+  * func2 (declared on line 3, located at 0x400537, 58 bytes long)
+    * Variable: a (int, located at FramePointerOffset(-20), declared at line 3)
+Line numbers:
+  * 3 (at 0x400537)
+  * 4 (at 0x400542)
+  * 5 (at 0x400558)
+  * 6 (at 0x400562)
+  * 7 (at 0x40056e)
+  * 9 (at 0x400571)
+  * 10 (at 0x40057c)
+  * 11 (at 0x400588)
+  * 12 (at 0x4005b1)
+  * 14 (at 0x4005b4)
+  * 15 (at 0x4005b8)
+  * 16 (at 0x4005c7)
+(deet) break *0x400537
+Set breakpoint 0 at 0x400537
+(deet) r
+Calling func2
+Child stopped (signal SIGTRAP)
+Stopped at /deet/samples/segfault.c:3
+(deet)
+</code></pre><p><strong>Expected outcomes:</strong></p>
+<ul>
+<li>Users should be able to use <code>break *addr</code> to set breakpoints before an
+inferior starts running</li>
+<li>When the inferior starts running, <code>0xcc</code> should be written to the address of
+each breakpoint</li>
+<li>Users should be able to use <code>break *addr</code> even after an inferior has started
+running (e.g. you should be able to ctrl+c on a sleeping program and set a
+breakpoint).</li>
+</ul>
+<h2 id="milestone-6-continuing-from-breakpoints">Milestone 6: Continuing from breakpoints</h2>
+<p>Continuing from a breakpoint is as simple and as hacky as setting a breakpoint
+was.</p>
+<p>When we have “hit a breakpoint,” the inferior has executed the <code>0xcc</code> INT
+instruction, causing the inferior to pause (due to <code>SIGTRAP</code>). However, the
+<code>0xcc</code> instruction <em>overwrote</em> the first byte of a valid instruction in the
+program. If we continue execution from after <code>0xcc</code>, we will have skipped a
+legitimate instruction. Worse, many instructions are multiple bytes long. If we
+set a breakpoint on a multi-byte instruction and continue execution as is, the
+CPU will attempt to interpret the second byte of the instruction as a new,
+separate instruction. It’s likely the program will crash due to a segfault or
+illegal instruction error.</p>
+<p>In order to continue from a breakpoint, we need to replace <code>0xcc</code> with the
+original instruction’s value. Then, we need to rewind the instruction pointer
+(<code>%rip</code>) so that it points at the beginning of the original instruction
+(instead of pointing one byte in).</p>
+<p>After doing this, we can resume execution. However, our breakpoint is no longer
+in the code, since we have swapped <code>0xcc</code> for the real instruction. If we had
+set a breakpoint in a loop or in a function that is called multiple times, this
+is not ideal!</p>
+<p>This problem is addressed with yet another hack. After replacing <code>0xcc</code> with
+the original instruction’s first byte, we tell ptrace to continue the inferior
+to the <em>next instruction</em> (instead of completely resuming execution). Then,
+once the inferior has executed the full instruction, we replace it with <code>0xcc</code>
+again to restore the breakpoint. Finally, we call <code>ptrace::cont</code> as usual to
+resume execution.</p>
+<p>Here is pseudocode to implement these strategies in a “continue” method. I have
+reordered the above to make it slightly easier to implement, but the substance
+is the same:</p>
+<pre><code>if inferior is stopped at a breakpoint:
+    ptrace::step to go to next instruction
+    wait for inferior to stop due to SIGTRAP
+        (if the inferior terminates here, then you should return that status and
+        not go any further in this pseudocode)
+    restore 0xcc in the breakpoint location
+
+ptrace::cont to resume normal execution
+wait for inferior to stop or terminate
+
+if inferior stopped at a breakpoint (i.e. (%rip - 1) matches a breakpoint address):
+    restore the first byte of the instruction we replaced
+    set %rip = %rip - 1 to rewind the instruction pointer
+</code></pre><p>Evidently, to do this, you’ll need to keep track of the breakpoints that are
+installed, as well as the instructions they replaced. You can do this however
+you like. We maintain a <code>HashMap&lt;usize, Breakpoint&gt;</code> mapping breakpoint
+addresses to <code>Breakpoint</code> structs:</p>
+<pre><code>#[derive(Clone)]
+struct Breakpoint {
+    addr: usize,
+    orig_byte: u8,
+}
+</code></pre><p><strong>Expected outcomes:</strong></p>
+<ul>
+<li>Users should be able to set breakpoints at instructions and continue onwards
+from them</li>
+</ul>
+<p>As an example, here I run <code>samples/segfault</code>, setting initial breakpoints on
+lines 15 and 10, then (after running the inferior and hitting the first
+breakpoint) adding another breakpoint at line 5. You can see that I hit each of
+the three breakpoints before the program eventually segfaults.</p>
+<pre><code>🍌 ./container cargo run samples/segfault
+    Finished dev [unoptimized + debuginfo] target(s) in 2.04s
+     Running `target/debug/deet samples/segfault`
+------
+samples/segfault.c
+------
+Global variables:
+Functions:
+  * main (declared on line 14, located at 0x4005b4, 21 bytes long)
+  * func1 (declared on line 9, located at 0x400571, 67 bytes long)
+    * Variable: a (int, located at FramePointerOffset(-20), declared at line 9)
+  * func2 (declared on line 3, located at 0x400537, 58 bytes long)
+    * Variable: a (int, located at FramePointerOffset(-20), declared at line 3)
+Line numbers:
+  * 3 (at 0x400537)
+  * 4 (at 0x400542)
+  * 5 (at 0x400558)
+  * 6 (at 0x400562)
+  * 7 (at 0x40056e)
+  * 9 (at 0x400571)
+  * 10 (at 0x40057c)
+  * 11 (at 0x400588)
+  * 12 (at 0x4005b1)
+  * 14 (at 0x4005b4)
+  * 15 (at 0x4005b8)
+  * 16 (at 0x4005c7)
+(deet) break *0x4005b8
+Set breakpoint 0 at 0x4005b8
+(deet) break *0x40057c
+Set breakpoint 1 at 0x40057c
+(deet) r
+Child stopped (signal SIGTRAP)
+Stopped at /deet/samples/segfault.c:15
+(deet) break *0x400558
+Set breakpoint 2 at 0x400558
+(deet) cont
+Child stopped (signal SIGTRAP)
+Stopped at /deet/samples/segfault.c:10
+(deet) cont
+Calling func2
+About to segfault... a=2
+Child stopped (signal SIGTRAP)
+Stopped at /deet/samples/segfault.c:5
+(deet) cont
+Child stopped (signal SIGSEGV)
+Stopped at /deet/samples/segfault.c:5
+(deet)
+</code></pre><h2 id="milestone-7-setting-breakpoints-on-symbols">Milestone 7: Setting breakpoints on symbols</h2>
+<p>As a finishing touch, modify your implementation of <code>Debugger</code> to allow setting
+breakpoints on line numbers and functions in addition to raw addresses.</p>
+<p>If the specified breakpoint target starts with <code>*</code>, set a breakpoint on a raw
+address as you did in the previous two milestones. If the target parses as a
+<code>usize</code> without error, treat it as a line number. Finally, if a function exists
+whose name matches the specified target, set a breakpoint at that function. You
+should print an error message if none of these cases succeed.</p>
+<p>You can use <code>DwarfData::get_addr_for_line</code> and
+<code>DwarfData::get_addr_for_function</code> to translate a line number or function name
+into an address. (You can pass <code>None</code> as the first argument to each function,
+unless you feel like supporting GDB’s syntax that allows for setting a
+breakpoint on a line in a specific file.) Then, you can simply use your code
+from the previous milestones to set a breakpoint at an address.</p>
+<pre><code>🍌 ./container cargo run samples/segfault
+   Compiling deet v0.1.0 (/deet)
+    Finished dev [unoptimized + debuginfo] target(s) in 26.91s
+     Running `target/debug/deet samples/segfault`
+(deet) break 15
+Set breakpoint 0 at 0x4005b8
+(deet) break func1
+Set breakpoint 1 at 0x400575
+(deet) break func2
+Set breakpoint 2 at 0x40053b
+(deet) r
+Child stopped (signal SIGTRAP)
+Stopped at /deet/samples/segfault.c:15
+(deet) c
+Child stopped (signal SIGTRAP)
+Stopped at /deet/samples/segfault.c:9
+(deet) c
+Calling func2
+Child stopped (signal SIGTRAP)
+Stopped at /deet/samples/segfault.c:3
+(deet) c
+About to segfault... a=2
+Child stopped (signal SIGSEGV)
+Stopped at /deet/samples/segfault.c:5
+(deet)
+</code></pre><p>Voilà! You have a functional debugger ready to knock the socks off of any GDB
+user!</p>
+<p>We hope you enjoyed the process of working through this and are proud of what
+you’ve built! It may not be the fanciest debugger in town, but you’ve
+implemented the foundation that all debuggers are built on. Hopefully this also
+gives you some respect for systems tooling – this was a lot of work, and
+there’s a lot going on here!</p>
+<h2 id="optional-extensions">Optional extensions</h2>
+<h3 id="next-line">Next line</h3>
+<p>To implement something like GDB’s “next” command, you can add a single-step
+method to <code>Inferior</code> that steps forward by one instruction (being careful to
+manage breakpoints properly). Then, you can call this method in a loop until
+you end up on a different line, or until the inferior terminates.</p>
+<h3 id="print-source-code-on-stop">Print source code on stop</h3>
+<p>Each time the inferior stops, in addition to showing a line number, GDB prints
+the line of source code that the inferior stopped on. This is extremely helpful
+when step debugging. It’s not too difficult to implement: since you know the
+file path and line number, you can read the file and print the appropriate text
+from it.</p>
+<h3 id="print-variables">Print variables</h3>
+<p>You may have noticed that we populated <code>DwarfData</code> with a list of variables in
+each function. Using this information, you can implement something like GDB’s
+<code>print</code> command to inspect the contents of variables.</p>
+
+</div>
+
+    
+
+
+</body></html>

@@ -1,0 +1,503 @@
+
+<!-- saved from url=(0071)https://reberhardt.com/cs110l/spring-2020/assignments/week-3-exercises/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+        <script async="" src="./CS 110L_ Safety in Systems Programming_files/analytics.js"></script><script src="./CS 110L_ Safety in Systems Programming_files/BSCVfTNTG-yWNgHeuCpu_OptETQ.js"></script><link href="./CS 110L_ Safety in Systems Programming_files/css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/review.css">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/codemirror.css">
+        <link rel="stylesheet" type="text/css" href="./CS 110L_ Safety in Systems Programming_files/style.css">
+        <title>CS 110L: Safety in Systems Programming</title>
+    </head>
+    <body>
+
+
+        <div class="page-header-container collapsed">
+            <div class="navbar">
+                <div class="navbar-contents">
+                    <div class="nav-home">
+                        <h3><a href="https://reberhardt.com/cs110l/spring-2020/">CS 110L</a></h3>
+                    </div>
+                    <ul>
+    <li><a href="https://reberhardt.com/cs110l/spring-2020/pages/schedule/">Schedule</a></li>
+    <li><a href="https://cs110l.slack.com/">Slack</a></li>
+    
+    
+    
+</ul>
+
+                </div>
+                <div class="old-class-warning">
+                    ⚠️ Heads up! You're looking at an old class website. <a href="https://cs110l.stanford.edu/">Click here for the latest version of this class.</a> ⚠️
+                </div>
+            </div>
+        </div>
+
+
+
+<div class="content">
+    <h1>Week 3 Exercises: Error handling, I/O, and traits</h1>
+
+    <p>Great job making it so far in the quarter! It has only been two weeks, but
+we’ve covered a lot of ground. We hope you are staying healthy and enjoying
+yourself this quarter.</p>
+<h2 id="purpose">Purpose</h2>
+<p>In the first part of these exercises, you’ll work through implementing a tool
+for inspecting file descriptors that you can use to debug your CS 110
+assignments. This will give you more practice with structs and error handling.</p>
+<p>The second part of the exercises will give you some experience with traits in
+Rust. Traits are most helpful in managing large codebases with many related
+types, and since we don’t have the time to introduce a substantial codebase, we
+won’t be having you design your own traits. However, these exercises will give
+you experience with implementing standard traits on your own data type.</p>
+<p>By the end of this week, you will have learned what we consider to be the most
+crucial parts of the Rust language. There is plenty more to learn, but what you
+don’t know yet you can quickly pick up through Googling and reading
+documentation. If you’re still feeling shaky about any of the concepts we’ve
+talked about, that’s okay! You’ll internalize them as you write more code. As
+always, you’re welcome to ask questions on the <code>#rust-questions</code> channel!</p>
+<p><strong>Due date:</strong> Wednesday, April 29, 11:59pm (Pacific time)</p>
+<p><em>Ping us on Slack if you are having difficulty with this assignment. We would
+love to help clarify any misunderstandings, and we want you to sleep!</em></p>
+<h2 id="getting-the-code">Getting the code</h2>
+<p>The starter code is available on GitHub
+<a href="https://github.com/reberhardt7/cs110l-spr-2020-starter-code">here</a>.</p>
+<h2 id="part-1-inspecting-file-descriptors">Part 1: Inspecting File Descriptors</h2>
+<p>In this part of the assignment, you will build a tool to inspect the open files
+of processes. This is based on a tool that was the precursor to C Playground’s
+open files debugger; although it is a bit complicated to use and does not show
+a full representation of the open file table (the kernel doesn’t expose much
+information to userspace, and we had to modify the kernel for C Playground), it
+is still very useful for debugging file descriptor issues in CS 110’s
+assignments 3 (multiprocessing pset) and 4 (Stanford shell).</p>
+<p>To use the tool to debug a file-descriptor-related problem, you would do the
+following:</p>
+<ul>
+<li>Add a <code>sleep(30)</code> call at the point in the program where you want to see the
+file descriptor table</li>
+<li>Run the buggy program in one terminal window</li>
+<li>In a second terminal window, <code>ssh</code> into the same myth machine (e.g.
+<code>myth65.stanford.edu</code> if that is where the first terminal window is logged
+in) and run <code>inspect-fds &lt;name or PID of your program&gt;</code></li>
+</ul>
+<p><code>inspect-fds</code> then prints a representation of the file descriptor tables at
+that point in time. For example, here is the output where a parent process
+creates two pipes and forks, using the file descriptor 4 to write data to the
+child process’s <code>stdin</code> and file descriptor 5 to read data from the child
+process’s <code>stdout</code>:</p>
+<p><img src="./CS 110L_ Safety in Systems Programming_files/inspect-fds-two-pipes.png" alt="Two pipes example output"></p>
+<p>The pipes are color coded so that it is easier to identify file descriptors
+that point to the same pipe (in this example, parent fd 4 writes to the pipe
+that child fd 0 reads from, and parent fd 5 reads from the pipe that child fd 1
+writes to).</p>
+<p>This tool is <em>especially</em> helpful for debugging mistakes in CS 110 assignment
+4, in which you implement a shell. Shells do pretty complicated rewiring of the
+file descriptor table in order to create pipelines of processes of arbitrary
+length, and in order to read/write input from/to files on disk. Here is what
+the file descriptor tables should look like when the assignment 4 shell runs
+<code>sleep 100 &lt; /tmp/testinput | sort | wc &gt; /tmp/testoutput</code>. (This is a useless
+command, but we put <code>sleep 100</code> there in order to keep the pipeline running
+while we go to run <code>inspect-fds</code> in the other terminal.)</p>
+<p><img src="./CS 110L_ Safety in Systems Programming_files/inspect-fds-stsh.png" alt="stsh example output"></p>
+<p>Here, you can see <code>sleep 100</code> is getting its input from <code>/tmp/testinput</code> and is
+writing output to a pipe, which is connected to stdin for <code>sort</code>, whose output
+goes to a second pipe, connected to <code>stdin</code> for <code>wc</code>, whose final output is
+written to <code>/tmp/testoutput</code>.</p>
+<p>Implementing this tool involves a lot of file I/O, which will give you
+excellent practice with error handling. I think I/O is probably the absolute
+worst when it comes to error handling, so if you can put up with this, you can
+put up with anything. This exercise will also give you good practice working
+with structs. We hope that throughout the process, you have fun with it, learn
+a bit about how Linux works, and build yourself a tool that you can use in CS
+110 in a week!</p>
+<h3 id="word-of-warning">Word of warning</h3>
+<p>First, before you start working through the milestones below, you should run
+<code>make</code> in the <code>inspect-fds</code> directory. This will build some tiny C programs
+that you can use for testing.</p>
+<p>Second, unfortunately, you need to run this tool on a Linux computer, because
+Mac and Windows don’t use the same API for providing information about
+processes. If you aren’t running Linux, you should do development on myth. If
+you’re using an editor like Sublime or VSCode, you might want to check to see
+if there is an SSHFS plugin available to simplify this. In the worst case
+scenario, you can run your editor locally, then sync to <code>myth</code> and run <code>cargo</code>
+in one command:</p>
+<pre><code>rsync -avxh --exclude target inspect-fds myth: &amp;&amp; ssh -t myth "cd inspect-fds &amp;&amp; cargo run"
+</code></pre><p>In order for this to not be a pain in the butt, you’ll want to have <a href="https://reberhardt.com/cs110l/spring-2020/handouts/tools-tips/#avoid-having-to-type-your-password-every-time">set up an
+SSH config</a>.</p>
+<p>If you are working on myth, you may commonly see these errors:</p>
+<pre><code>warning: Hard linking files in the incremental compilation cache failed. Copying files instead.
+</code></pre><p>You can ignore these errors. They indicate that the AFS filesystem doesn’t
+support a feature that <code>cargo</code> uses for optimization, but it shouldn’t be a
+problem for us.</p>
+<h3 id="milestone-1-getting-the-target-process">Milestone 1: Getting the target process</h3>
+<p>A user specifies the process to inspect using a command line argument. For
+example, if you are running <code>bash</code>, you can inspect it like so:</p>
+<pre><code>cargo run bash
+</code></pre><p>Our first order of business is to get information about the process the user
+wants to inspect.</p>
+<p>Open <code>src/ps_utils.rs</code> and quicky skim the code that is provided to you. We
+have written some functions to call <code>ps</code> and <code>pgrep</code> to get information about
+processes by PID or by command name. There is a lot of semi-complicated error
+handling in this file (as there often is when dealing with I/O), so it may be
+helpful to read as an example.  You won’t need to modify anything in this file
+for this assignment, but you will need to call <code>get_target</code>.</p>
+<p>Next, open <code>src/main.rs</code>. You’ll see that we have declared a <code>target</code> variable
+containing the first argument in <code>argv</code>. Use the <code>ps_utils::get_target</code>
+function from the previous file to search for the target process.</p>
+<ul>
+<li>You’re welcome to use <code>expect()</code> to handle the case where <code>get_target</code>
+returns an <code>Err</code>: just provide some error message about there being a problem
+calling <code>ps</code> or <code>pgrep</code>.</li>
+<li>If <code>get_target</code> returns <code>None</code>, you should print an error message about there
+not being any matching process and call <code>std::process::exit(1)</code>.</li>
+<li>Otherwise, print out the found process’s PID.</li>
+</ul>
+<p>Here is our output (which you are <em>not</em> required to match):</p>
+<pre><code>🍉  cargo run bash
+    Finished dev [unoptimized + debuginfo] target(s) in 0.58s
+     Running `target/debug/inspect-fds bash`
+Found pid 18042
+🍉  cargo run nonexistent
+    Finished dev [unoptimized + debuginfo] target(s) in 0.72s
+     Running `target/debug/inspect-fds nonexistent`
+Target "nonexistent" did not match any running PIDs or executables
+</code></pre><p>As a convenience, we have also provided tests that run your program, checking
+the exit code. (They don’t verify that your program prints anything in
+particular!) You can run <code>cargo test exit_status -- --nocapture --test-threads=1</code>:</p>
+<pre><code>🍉  cargo test exit_status -- --nocapture --test-threads=1
+    Finished dev [unoptimized + debuginfo] target(s) in 0.53s
+     Running target/debug/deps/inspect_fds-41ab7dbb115eafda
+
+running 2 tests
+test test::test_exit_status_invalid_target ... Target "./nonexistent" did not match any running PIDs or executables
+ok
+test test::test_exit_status_valid_target ... Found pid 18306
+ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out
+</code></pre><h3 id="milestone-2-printing-process-info">Milestone 2: Printing process info</h3>
+<p>Let’s start printing out some more information about these processes. First, in
+<code>src/process.rs</code>, let’s add a <code>print()</code> method to the <code>Process</code> struct. This
+function will print details about this process. For now, print out the command
+name, pid, and ppid in a format that is something like this:</p>
+<pre><code>========== "bash" (pid 18042, ppid 17996) ==========
+</code></pre><p>You are welcome to format your output however you like.</p>
+<p>Note: You could implement this functionality as part of the <code>Display</code> trait for
+<code>Process</code>. However, the <code>Display</code> trait is typically supposed to generate a
+compact, general-purpose representation of a value that can be used anywhere in
+a codebase. Since this is generating detailed output for a high-level purpose
+of this program, we put our implementation in an ordinary <code>print()</code> method on
+<code>Process</code>.</p>
+<p>Once you have implemented this method, go back to <code>main</code> and call your method
+on the <code>Process</code> object that you got in the previous milestone. Run your
+program (or use the <code>cargo test</code> command from the previous milestone) to ensure
+it is printing as you expect.</p>
+<h3 id="milestone-3-listing-file-descriptors">Milestone 3: Listing file descriptors</h3>
+<p>Let’s get into the meat of this program! The Linux operating system exposes
+some information from the kernel through the <code>/proc</code> filesystem. Files and
+directories under <code>/proc</code> do not actually exist on disk; instead, they are
+generated by the kernel on demand whenever you read them. You can see a
+“directory” for each pid in <code>/proc</code>, and you can list each process’s file
+descriptors by examining the directory <code>/proc/{pid}/fd</code>. For example,
+inspecting <code>zsh</code>'s file descriptors (you would see a different result if you
+are running <code>bash</code>):</p>
+<pre><code>🍉  ls /proc/$$/fd     # $$ is a shell variable containing the shell's pid
+0  1  10  11  12  14  2
+</code></pre><p>In this milestone, we will implement <code>Process::list_fds</code>, which lists the
+contents of <code>/proc/{pid}/fd</code> to get the file descriptor numbers that the
+process has open.</p>
+<p>Open <code>src/process.rs</code> and have a look at the <code>list_fds</code> method. This function
+will return a list of file descriptor numbers (<code>Vec&lt;usize&gt;</code>) <em>if the file
+descriptor table is available</em>; otherwise, it will return <code>None</code>. It is
+important to handle the case of missing file descriptor tables for the purposes
+of handling <em>zombie processes,</em> which are processes that have exited but have
+not yet been reaped by their parents (i.e. their parents have not yet called
+<code>waitpid</code> on them). The processes still exist in the process table, but most of
+their resources have been freed, including the file descriptor table.</p>
+<p>To implement this function, you should use <code>fs::read_dir(path)</code> to open the
+directory. Then, iterate over the directory entries, parse the file names as
+<code>usize</code>, and build a vector of file descriptor numbers. Here are some helpful
+hints:</p>
+<ul>
+<li>The <code>format!</code> macro will be useful for constructing the target path.
+<code>format!</code> is invoked exactly like <code>println!</code>, but instead of printing a
+formatted string, it returns it.</li>
+<li>Your function should not panic. That means you shouldn’t call <code>unwrap()</code> or
+<code>expect()</code> anywhere. Errors are anticipated in this function, and if they
+occur, you should return <code>None</code>.</li>
+<li>When doing file I/O, you will encounter many functions that return a
+<code>Result</code>. If you encounter an <code>Err</code>, you should simply return <code>None</code>, as this
+indicates the file descriptor table is unavailable. Here is a nice
+syntactical shortcut to make this slightly more pleasant:
+<pre><code>let some_var = something_that_returns_result().ok()?;
+</code></pre><p>The <code>Result::ok()</code> function converts a <code>Result</code> to an <code>Option</code>, returning
+<code>Some(val)</code> if the <code>Result</code> was <code>Ok(val)</code>, or <code>None</code> if the <code>Result</code> was
+<code>Err(some_error)</code>. Then, the <code>?</code> operator unwraps the <code>Option</code>, making your
+function return <code>None</code> if the <code>Option</code> was <code>None</code>.</p>
+</li>
+<li>The first example for
+<a href="https://doc.rust-lang.org/std/fs/fn.read_dir.html"><code>fs::read_dir</code></a> may be
+helpful for seeing how to read a directory. Note that their function returns
+<code>Result</code> and ours returns <code>Option</code>, so you will need to adopt the usage of
+<code>?</code> as explained in the previous bullet point.</li>
+</ul>
+<p>When you have implemented this function, modify your <code>print()</code> function to call
+<code>list_fds()</code>, loop over each file descriptor, and print each one. Try running
+your program, and make sure it produces the output you expect. You can also run
+the provided tests:</p>
+<pre><code>cargo test list_fds
+</code></pre><h3 id="milestone-4-printing-additional-open-file-information">Milestone 4: Printing additional open file information</h3>
+<p>Let’s take a closer look at <code>/proc/{pid}/fd</code>:</p>
+<pre><code>🍉  ls -l /proc/$$/fd
+total 0
+lrwx------ 1 rebs operator 64 Apr 22 15:13 0 -&gt; /dev/pts/38
+lrwx------ 1 rebs operator 64 Apr 22 15:13 1 -&gt; /dev/pts/38
+lrwx------ 1 rebs operator 64 Apr 22 15:13 10 -&gt; /dev/pts/38
+lr-x------ 1 rebs operator 64 Apr 22 15:13 11 -&gt; /dev/urandom
+lrwx------ 1 rebs operator 64 Apr 22 15:13 12 -&gt; socket:[17099833]
+lr-x------ 1 rebs operator 64 Apr 22 15:13 14 -&gt; /usr/share/zsh/functions/Completion.zwc
+lrwx------ 1 rebs operator 64 Apr 22 15:13 2 -&gt; /dev/pts/38
+</code></pre><p>Each file in this directory is a <em>symbolic link</em> pointing to whatever file the
+file descriptor points to in the vnode table. Here, you can see that file
+descriptors 0, 1, and 2 point to <code>/dev/pts/38</code>, which is the file that is
+mapped to the terminal I currently have open.</p>
+<p>We can get additional information about each file descriptor from
+<code>/proc/{pid}/fdinfo/{fd}</code>:</p>
+<pre><code>🍉  cat /proc/$$/fdinfo/0
+pos:	0
+flags:	0100002
+mnt_id:	22
+</code></pre><p>This tells us the cursor, as well as flags set on the open file table entry
+(which includes flags like <code>O_RDONLY</code>, <code>O_WRONLY</code>, <code>O_WRONLY</code>).</p>
+<p>Open <code>src/open_file.rs</code> and skim the code that is in this file. In this
+milestone, you will need to implement <code>OpenFile::from_fd</code>:</p>
+<ul>
+<li>First, use
+<a href="https://doc.rust-lang.org/std/fs/fn.read_link.html"><code>fs::read_link</code></a> to read
+the destination path that the <code>/proc/{pid}/fd/{fd}</code> symbolic link points to.
+Similar to the previous milestone, you’ll want to use <code>.ok()?</code> to return
+<code>None</code> if the file can’t be read (presumably because the file descriptor
+table is no longer available – the process may have just exited). Pass the
+path (as a string – see
+<a href="https://doc.rust-lang.org/std/path/struct.PathBuf.html#method.to_str"><code>PathBuf::to_str()</code></a>)
+to <code>OpenFile::path_to_name</code> to get a human-friendly name for the file.</li>
+<li>Use
+<a href="https://doc.rust-lang.org/std/fs/fn.read_to_string.html"><code>fs::read_to_string</code></a>
+to read the contents of <code>/proc/{pid}/fdinfo/{fd}</code>. (Be careful not to read
+<code>/proc/{pid}/**fd**/{fd}</code>! You should call <code>read_link</code> on <code>fd/</code> to see where
+the symbolic link points to, but if you call <code>read_to_string</code> on <code>fd/</code>, it
+will follow the symbolic link and try reading the file that the fd points to.
+When it tries to read <code>/proc/{pid}/fd/0</code>, that is going to attempt to read
+from <code>/dev/pts/38</code>, which is the terminal file, effectively trying to read
+from stdin, which will cause your program to hang. By contrast,
+<code>/proc/{pid}/fdinfo/0</code> is a <em>regular file</em> that you can read to get
+information about fd 0.)
+<ul>
+<li>Pass this to <code>OpenFile::parse_cursor</code> to extract the cursor from the file.</li>
+<li>Pass this to <code>OpenFile::parse_access_mode</code> to extract the mode from the file.</li>
+</ul>
+</li>
+<li>Return a new <code>OpenFile</code> struct with the name, cursor, and access mode you
+extracted.</li>
+</ul>
+<p>You can use the supplied tests to check your work:</p>
+<pre><code>cargo test openfile_from_fd
+</code></pre><p>Once you have implemented this function, open <code>process.rs</code> again and go to your
+<code>Process::print</code> function. Instead of iterating over <code>self.list_fds()</code>, use
+<code>self.list_open_files()</code> to get the file descriptors along with the
+corresponding <code>OpenFile</code>s. You can use the following code to print file
+descriptors, although you are welcome to write your own if you like:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">match</span><span style="color:#bbb"> </span>self.list_open_files()<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020">None</span><span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>println<span style="color:#666">!</span>(<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="">"</span>Warning: <span style="color:#0e84b5;font-weight:bold">could</span><span style="color:#bbb"> </span>not<span style="color:#bbb"> </span>inspect<span style="color:#bbb"> </span>file<span style="color:#bbb"> </span>descriptors<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>this<span style="color:#bbb"> </span>process<span style="color:#666">!</span><span style="color:#bbb"> </span><span style="">\</span><span style="color:#bbb">
+</span><span style="color:#bbb">            </span>It<span style="color:#bbb"> </span>might<span style="color:#bbb"> </span>have<span style="color:#bbb"> </span>exited<span style="color:#bbb"> </span>just<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">as</span><span style="color:#bbb"> </span>we<span style="color:#bbb"> </span>were<span style="color:#bbb"> </span>about<span style="color:#bbb"> </span>to<span style="color:#bbb"> </span>look<span style="color:#bbb"> </span>at<span style="color:#bbb"> </span>its<span style="color:#bbb"> </span>fd<span style="color:#bbb"> </span>table,<span style="color:#bbb"> </span><span style="">\</span><span style="color:#bbb">
+</span><span style="color:#bbb">            </span>or<span style="color:#bbb"> </span>it<span style="color:#bbb"> </span>might<span style="color:#bbb"> </span>have<span style="color:#bbb"> </span>exited<span style="color:#bbb"> </span>a<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">while</span><span style="color:#bbb"> </span>ago<span style="color:#bbb"> </span>and<span style="color:#bbb"> </span>is<span style="color:#bbb"> </span>waiting<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>the<span style="color:#bbb"> </span>parent<span style="color:#bbb"> </span><span style="">\</span><span style="color:#bbb">
+</span><span style="color:#bbb">            </span>to<span style="color:#bbb"> </span>reap<span style="color:#bbb"> </span>it.<span style="">"</span><span style="color:#bbb">
+</span><span style="color:#bbb">    </span>),<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020">Some</span>(open_files)<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>(fd,<span style="color:#bbb"> </span>file)<span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">in</span><span style="color:#bbb"> </span>open_files<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">            </span>println<span style="color:#666">!</span>(<span style="color:#bbb">
+</span><span style="color:#bbb">                </span><span style="color:#4070a0">"{:&lt;4} {:&lt;15} cursor: {:&lt;4} {}"</span>,<span style="color:#bbb">
+</span><span style="color:#bbb">                </span>fd,<span style="color:#bbb">
+</span><span style="color:#bbb">                </span>format<span style="color:#666">!</span>(<span style="color:#4070a0">"({})"</span>,<span style="color:#bbb"> </span>file.access_mode),<span style="color:#bbb">
+</span><span style="color:#bbb">                </span>file.cursor,<span style="color:#bbb">
+</span><span style="color:#bbb">                </span>file.colorized_name(),<span style="color:#bbb">
+</span><span style="color:#bbb">            </span>);<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>}<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>When this is done, your <code>inspect-fds</code> should be looking pretty good! Try it out:</p>
+<pre><code>🍉  cargo run bash
+    Finished dev [unoptimized + debuginfo] target(s) in 1.16s
+     Running `target/debug/inspect-fds bash`
+========== "bash" (pid 19018, ppid 18803) ==========
+0    (read/write)    cursor: 0    &lt;terminal&gt;
+1    (read/write)    cursor: 0    &lt;terminal&gt;
+2    (read/write)    cursor: 0    &lt;terminal&gt;
+3    (read)          cursor: 0    /dev/urandom
+4    (read/write)    cursor: 0    socket:[16103476]
+255  (read/write)    cursor: 0    &lt;terminal&gt;
+
+🍉  ./zombie_test &amp; cargo run zombie_test
+[1] 20630
+    Finished dev [unoptimized + debuginfo] target(s) in 1.09s
+     Running `target/debug/inspect-fds zombie_test`
+========== "./zombie_test" (pid 20630, ppid 18509) ==========
+0    (read/write)    cursor: 0    &lt;terminal&gt;
+1    (read/write)    cursor: 0    &lt;terminal&gt;
+2    (read/write)    cursor: 0    &lt;terminal&gt;
+4    (write)         cursor: 0    &lt;pipe #16102316&gt;
+
+========== "[zombie_test] &lt;defunct&gt;" (pid 20632, ppid 20630) ==========
+Warning: could not inspect file descriptors for this process! It might have exited just as we were about to look at its fd table, or it might have exited a while ago and is waiting for the parent to reap it.
+</code></pre><h3 id="milestone-5-inspecting-child-processes">Milestone 5: Inspecting child processes</h3>
+<p>For this tool to be most useful in debugging file descriptor issues (such as
+how pipes are wired up), we don’t want to only show information about one
+process; we should also show information about other related processes. For our
+purposes, let’s print the user-specified process along with all its child
+processes.</p>
+<p>This involves a simple modification to your code in <code>main.rs</code>. After printing
+information about the user-specified process, call
+<code>ps_utils::get_child_processes</code> to get a list of child processes (again, it’s
+acceptable to call <code>expect()</code> here). Iterate over these processes, and call
+your print function on each of them.</p>
+<p>Your output should look something like this:</p>
+<pre><code>🍉  ./multi_pipe_test &amp; cargo run multi_pipe_test
+[1] 4060
+    Finished dev [unoptimized + debuginfo] target(s) in 1.04s
+     Running `target/debug/inspect-fds multi_pipe_test`
+========== "./multi_pipe_test" (pid 4060, ppid 18509) ==========
+0    (read/write)    cursor: 0    &lt;terminal&gt;
+1    (read/write)    cursor: 0    &lt;terminal&gt;
+2    (read/write)    cursor: 0    &lt;terminal&gt;
+4    (write)         cursor: 0    &lt;pipe #16301201&gt;
+5    (read)          cursor: 0    &lt;pipe #16301202&gt;
+
+========== "./multi_pipe_test" (pid 4062, ppid 4060) ==========
+0    (read)          cursor: 0    &lt;pipe #16301201&gt;
+1    (write)         cursor: 0    &lt;pipe #16301202&gt;
+2    (read/write)    cursor: 0    &lt;terminal&gt;
+</code></pre><p>That’s it! You’re done! You’ll be able to use this tool to debug your CS 110
+assignment 3 and assignment 4 code.</p>
+<h2 id="part-2-a-generic-linkedlist">Part 2: A Generic <code>LinkedList</code></h2>
+<p>Let’s get some practice with generics and traits! In this portion of the
+exercises, we will take the <code>LinkedList</code> lecture example from last Thursday and
+extend its implementation to make it more useful as a data structure.</p>
+<p>You will find Thursday’s code in <code>src/linked_list.rs</code>. You are invited to add
+code to <code>src/main.rs</code> to test your changes.</p>
+<h3 id="make-linkedlist-generic">Make <code>LinkedList</code> generic</h3>
+<p>Our <code>LinkedList</code> implementation from last Thursday only stores <code>u32</code> values.
+Your first task is to modify <code>LinkedList</code> to support generic types, storing
+values of any type <code>T</code>. When you have done this, modify <code>src/main.rs</code> and try
+creating a list of <code>String</code>s!</p>
+<p>Note: this may require you to modify the <code>impl fmt::Display</code> to incorporate a
+trait bound! You’ll need to consider whether it makes sense to implement
+<code>Display</code> on <code>LinkedList</code> for <em>all</em> generic types. You should refer to
+Tuesday’s lecture material for a discussion on trait bounds.</p>
+<h3 id="implementing-traits">Implementing traits</h3>
+<p>There are four traits below that you may implement. Of them, <strong>you only need to
+implement two.</strong> The first three are the most straightforward, but if you have
+extra time and are feeling adventurous, try implementing <code>IntoIter</code>!</p>
+<h4 id="clone"><code>Clone</code></h4>
+<p>The <a href="https://doc.rust-lang.org/std/clone/trait.Clone.html#how-can-i-implement-clone">Clone</a>
+trait adds a <code>clone()</code> method to objects that creates a deep copy of the
+object. Your implementation should synthesize a freshly-allocated linked list
+copied from the original one. Similar to <code>Display</code>, you’ll need to think about
+the trait bounds you want to impose on <code>T</code>.</p>
+<p>Hint: Note that Box<t> implements clone where T: Clone (it will allocate new heap memory and put the result of cloning T into that memory), Option<t> implements clone where T: Clone, and you can implement Clone for your Node<t> as well as a part of this! This results in self.head.clone() cloning all of your nodes! (think about why!)</t></t></t></p>
+<h4 id="partialeq"><code>PartialEq</code></h4>
+<p>The <a href="https://doc.rust-lang.org/std/cmp/trait.PartialEq.html#how-can-i-implement-partialeq">PartialEq</a>
+trait makes it possible to compare values using the <code>==</code> operator.  Two linked
+lists should be considered equal to one another if they are of the same length
+and corresponding nodes are equal. Again, you need to impose appropriate trait
+bounds here.</p>
+<h4 id="computenorm"><code>ComputeNorm</code></h4>
+<p>Implement the <code>ComputeNorm</code> trait from lecture for <code>LinkedList&lt;f64&gt;</code>. If you
+implement <code>Iterator</code>/<code>IntoIterator</code> (below), you should use that to implement
+<code>ComputeNorm</code>!</p>
+<h4 id="iterator-and-intoiterator"><code>Iterator</code> and <code>IntoIterator</code></h4>
+<p>The <a href="https://doc.rust-lang.org/std/iter/trait.IntoIterator.html">IntoIterator</a>
+trait allows you to iterate over a type using a <code>for</code> loop. Try implementing
+<code>IntoIter</code> for <code>LinkedList&lt;T&gt;</code> (i.e. an iterator that takes ownership of the
+list it is iterating over) and <code>&amp;LinkedList&lt;T&gt;</code> (i.e. an iterator that only
+references elements in the list).</p>
+<p><a href="http://xion.io/post/code/rust-for-loop.html">This article</a> provides a great
+overview of what is going on and what is necessary to implement.  I also highly
+recommend looking at Will Crichton’s <a href="http://cs242.stanford.edu/f19/lectures/07-1-traits">wonderful notes on
+traits</a> under the
+“Associated Types” section for an example of how to implement the iterator
+trait. Note that he doesn’t define his own struct and instead implements the
+trait on <code>&amp;List&lt;T&gt;</code>. For your own implementation, you should implement your own
+struct that keeps track of the current node pointer and make that struct public
+i.e. with <code>pub struct LinkedListIterator</code>.</p>
+<p>For <code>&amp;LinkedList&lt;T&gt;</code>, implement the trait only on types <code>T</code> that implement
+<code>Clone</code>, so that the <code>next</code> function returns copies of the elements in your
+list.  There is a way to implement this in a way that doesn’t require cloning
+and we could also implement <code>IntoIterator</code> for <code>&amp;mut T</code> – this would, however,
+lead to a more complex implementation. Feel free to try it though if you’d like
+an extra challenge!</p>
+<p>Note that, in order to implement <code>IntoIterator</code> for <code>LinkedList&lt;T&gt;</code> (as in, an
+iterator that will take ownership of the <code>LinkedList&lt;T&gt;</code> it is iterating over),
+you can simply implement the <code>Iterator</code> trait for <code>LinkedList&lt;T&gt;</code>. Our implementation
+of <code>next</code> is only one line long since it makes a call to an already implemented
+function! (hint hint)</p>
+<p>Implementing <code>IntoIterator</code> for <code>&amp;LinkedList&lt;T&gt;</code> is a little more complicated, so
+we’ve scaffolded it for you. Here’s what the implementation would look like for
+the original <code>LinkedList</code> that would only handle <code>u32</code>s:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">LinkedListIter</span><span style="color:#666">&lt;</span><span style="color:#4070a0">'a</span><span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>current: <span style="color:#007020">&amp;</span><span style="color:#4070a0">'a</span><span style="color:#bbb"> </span><span style="color:#007020">Option</span><span style="color:#666">&lt;</span><span style="color:#007020">Box</span><span style="color:#666">&lt;</span>Node<span style="color:#666">&gt;&gt;</span>,<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">impl</span><span style="color:#bbb"> </span><span style="color:#007020">Iterator</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span>LinkedListIter<span style="color:#666">&lt;</span><span style="color:#4070a0">'_</span><span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">type</span> <span style="color:#0e84b5;font-weight:bold">Item</span><span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#902000">u32</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">next</span>(<span style="color:#666">&amp;</span><span style="color:#007020;font-weight:bold">mut</span><span style="color:#bbb"> </span>self)<span style="color:#bbb"> </span>-&gt; <span style="color:#007020">Option</span><span style="color:#666">&lt;</span><span style="color:#902000">u32</span><span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">        </span><span style="color:#007020;font-weight:bold">match</span><span style="color:#bbb"> </span>self.current<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">            </span><span style="color:#007020">Some</span>(node)<span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">                </span><span style="color:#60a0b0;font-style:italic">// YOU FILL THIS IN!
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">            </span>},<span style="color:#bbb">
+</span><span style="color:#bbb">            </span><span style="color:#007020">None</span><span style="color:#bbb"> </span><span style="color:#666">=&gt;</span><span style="color:#bbb"> </span><span style="color:#60a0b0;font-style:italic">// YOU FILL THIS IN!
+</span><span style="color:#60a0b0;font-style:italic"></span><span style="color:#bbb">        </span>}<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span><span style="color:#bbb">
+</span><span style="color:#bbb"></span><span style="color:#007020;font-weight:bold">impl</span><span style="color:#666">&lt;</span><span style="color:#4070a0">'a</span><span style="color:#666">&gt;</span><span style="color:#bbb"> </span><span style="color:#007020">IntoIterator</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">for</span><span style="color:#bbb"> </span><span style="color:#666">&amp;</span><span style="color:#4070a0">'a</span><span style="color:#bbb"> </span>LinkedList<span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">type</span> <span style="color:#0e84b5;font-weight:bold">Item</span><span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span><span style="color:#902000">u32</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">type</span> <span style="color:#0e84b5;font-weight:bold">IntoIter</span><span style="color:#bbb"> </span><span style="color:#666">=</span><span style="color:#bbb"> </span>LinkedListIter<span style="color:#666">&lt;</span><span style="color:#4070a0">'a</span><span style="color:#666">&gt;</span>;<span style="color:#bbb">
+</span><span style="color:#bbb">    </span><span style="color:#007020;font-weight:bold">fn</span> <span style="color:#06287e">into_iter</span>(self)<span style="color:#bbb"> </span>-&gt; <span style="color:#0e84b5;font-weight:bold">LinkedListIter</span><span style="color:#666">&lt;</span><span style="color:#4070a0">'a</span><span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">        </span>LinkedListIter<span style="color:#bbb"> </span>{current: <span style="color:#007020">&amp;</span><span style="color:#0e84b5;font-weight:bold">self</span>.head}<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>}<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>Here the <code>'a</code> syntax is labeling a lifetime. Let’s zero in on the struct definition:</p>
+<div class="highlight"><pre style="background-color:#f0f0f0;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-rust" data-lang="rust"><span style="color:#007020;font-weight:bold">pub</span><span style="color:#bbb"> </span><span style="color:#007020;font-weight:bold">struct</span> <span style="color:#0e84b5;font-weight:bold">LinkedListIter</span><span style="color:#666">&lt;</span><span style="color:#4070a0">'a</span><span style="color:#666">&gt;</span><span style="color:#bbb"> </span>{<span style="color:#bbb">
+</span><span style="color:#bbb">    </span>current: <span style="color:#007020">&amp;</span><span style="color:#4070a0">'a</span><span style="color:#bbb"> </span><span style="color:#007020">Option</span><span style="color:#666">&lt;</span><span style="color:#007020">Box</span><span style="color:#666">&lt;</span>Node<span style="color:#666">&gt;&gt;</span>,<span style="color:#bbb">
+</span><span style="color:#bbb"></span>}<span style="color:#bbb">
+</span></code></pre></div><p>This syntax essentially says that the struct lives as long as the reference it
+contains, so that we don’t have issues with dangling pointers. In the code that
+you fill in, you won’t have to deal with <code>'a</code> explicity. However, in order to
+make this generic, everywhere you see a <code>&lt;'a&gt;</code>, you will have to replace it with
+a <code>&lt;'a, T&gt;</code>.</p>
+<p>You can read more about lifetimes <a href="https://doc.rust-lang.org/1.9.0/book/lifetimes.html">here</a>.</p>
+<h2 id="part-3-weekly-survey">Part 3: Weekly survey</h2>
+<p>Please let us know how you’re doing using <a href="https://forms.gle/XP4n9nBQGkCsUrj78">this survey</a>.</p>
+<p>When you have submitted the survey, you should see a password. Put this code in
+<code>survey.txt</code> before submitting.</p>
+<h2 id="submitting-your-work">Submitting your work</h2>
+<p>As with last week, you can commit your progress using <code>git</code>:</p>
+<pre><code>git commit -am "Type some title here to identify this snapshot!"
+</code></pre><p>In order to submit your work, commit it, then run <code>git push</code>. This will upload
+your commits (snapshots) to Github, where we can access them. You can verify
+that your code is submitted by visiting
+<a href="https://github.com/cs110l/week3-yourSunetid">https://github.com/cs110l/week3-yourSunetid</a> and browsing the code there. You
+can <code>git push</code> as many times as you’d like.</p>
+<h2 id="grading">Grading</h2>
+<p>Part 1 (<code>inspect-fds</code>) will be worth 50% (with each milestone being worth 10%),
+Part 2 (linked list) will be worth 30%, and Part 3 (survey) will be worth 20%.
+You’ll earn the full credit for each piece if we can see that you’ve made a
+good-faith effort to complete it.</p>
+
+</div>
+
+    
+
+
+</body></html>
