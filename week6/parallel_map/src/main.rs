@@ -7,8 +7,51 @@ where
     T: Send + 'static,
     U: Send + 'static + Default,
 {
-    let mut output_vec: Vec<U> = Vec::with_capacity(input_vec.len());
-    // TODO: implement parallel map!
+    let len = input_vec.len();
+    let mut output_vec: Vec<U> = Vec::with_capacity(len);
+    unsafe { output_vec.set_len(len); }
+
+    let (sender_in, receiver_in): (crossbeam_channel::Sender<(usize, T)>, crossbeam_channel::Receiver<(usize, T)>) = crossbeam_channel::unbounded();
+    let (sender_out, receiver_out): (crossbeam_channel::Sender<(usize, U)>, crossbeam_channel::Receiver<(usize, U)>) = crossbeam_channel::unbounded();
+
+    let mut threads= Vec::new();
+    for _ in 0..num_threads {
+        let receiver = receiver_in.clone();
+        let sender = sender_out.clone();
+        threads.push(thread::spawn(move || {
+            while let Ok((i, v)) = receiver.recv() {
+                let result = f(v);
+                sender.send((i, result)).expect("Tried writing to the channel, but there are no receivers!");
+            }
+        }));
+    }
+    
+    let sender_in_ref = sender_in.clone();
+    let thread_send = thread::spawn(move || {
+        while let Some(v) = input_vec.pop() {
+            let i = input_vec.len();
+            sender_in_ref.send((i, v)).expect("Tried writing to the channel, but there are no receivers!");
+        }
+    });
+
+    let mut counter = 0;
+    while counter < len {
+        if let Ok((i, v)) = receiver_out.recv() {
+            output_vec[i] = v;
+            counter += 1;
+        } else {
+            panic!("something went wrong!");
+        }   
+    }
+
+    drop(sender_in);
+    drop(sender_out);
+
+    thread_send.join().expect("Panic occured in thread!");
+    for thread in threads {
+        thread.join().expect("Panic occured in thread!");
+    }
+
     output_vec
 }
 
